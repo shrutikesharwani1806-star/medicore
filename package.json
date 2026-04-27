@@ -1,0 +1,36 @@
+{
+  "name": "medicore-1",
+  "version": "1.0.0",
+  "description": "MediCore is a full-stack MERN application designed to streamline hospital operations and enhance patient-doctor interaction. It includes appointment booking, prescription management, real-time updates, and AI-powered healthcare assistance.",
+  "license": "ISC",
+  "author": "shruti kesharwani",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "server": "node server/server.js",
+    "client": "cd client && npm run dev",
+    "build": "npm install && cd client && npm install && npm run build",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.15.2",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^1.41.3",
+    "colors": "^1.4.0",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.4.1",
+    "multer": "^2.1.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "nodemailer": "^8.0.5",
+    "openai": "^6.34.0",
+    "razorpay": "^2.9.6",
+    "socket.io": "^4.8.3",
+    "twilio": "^6.0.0"
+  }
+}
