@@ -38,7 +38,9 @@ const app = express()
 const allowedOrigins = [
     process.env.CLIENT_URL,            // Production frontend (Render)
     "http://localhost:5173",            // Vite dev server
+    "http://127.0.0.1:5173",            // Vite dev server (IP)
     "http://localhost:5000",            // Same-origin in production
+    "http://127.0.0.1:5000",            // Same-origin (IP)
 ].filter(Boolean)
 
 // CORS configuration
@@ -160,4 +162,4 @@ if (process.env.NODE_ENV === "production") {
 //error handler 
 app.use(errorHandler)
 
-httpServer.listen(PORT, () => console.log(`SERVER IS RUNNING AT PORT : ${PORT}`.bgBlue.white))
+httpServer.listen(PORT, "0.0.0.0", () => console.log(`SERVER IS RUNNING AT PORT : ${PORT}`.bgBlue.white))
