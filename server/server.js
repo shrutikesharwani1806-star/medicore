@@ -41,6 +41,7 @@ const allowedOrigins = [
     "http://127.0.0.1:5173",            // Vite dev server (IP)
     "http://localhost:5000",            // Same-origin in production
     "http://127.0.0.1:5000",            // Same-origin (IP)
+    "https://medicore-6kuo.onrender.com" // Explicit Render URL
 ].filter(Boolean)
 
 // CORS configuration
@@ -49,6 +50,14 @@ app.use(cors({
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 }))
+
+// Special middleware for Private Network Access (PNA)
+app.use((req, res, next) => {
+    if (req.headers['access-control-request-private-network']) {
+        res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    }
+    next();
+})
 
 //Body-Parser
 app.use(express.json({ limit: '10mb' }))
