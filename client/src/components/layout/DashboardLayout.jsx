@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { Menu, Heart, LogOut, Coins } from 'lucide-react';
-import { io } from 'socket.io-client';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-
-const socket = io("http://localhost:5000");
+import socket from '../../socket';
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

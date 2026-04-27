@@ -127,13 +127,33 @@
 
 25. **Integrated Video Consultation**
     - Secure, 1:1 video rooms powered by Jitsi.
-    - "Join Video Call" button dynamically appears only when an appointment is confirmed.
+    - Both **Doctors and Patients** can initiate video calls from the chat page.
+    - Video call generates a shared room ID so both parties join the same session.
     - In-app consultation experience with camera/mic controls.
 
 26. **Digital Prescription Workflow**
     - Doctors can fill a structured digital prescription form (medicines, dosage, frequency, duration).
     - Prescriptions are stored in the database and linked to specific appointments.
     - Patients can view and download prescriptions after paying the consultation fee (if applicable).
-- **Production Deployment Configuration:** Setup CI/CD and proper environment variables for Vercel (Frontend) and Render/Railway (Backend).
-- **Razorpay Sandbox Testing:** Add valid Razorpay keys to environment variables to ensure the checkout iframe doesn't crash on invalid mock keys.
 
+27. **In-Chat Prescription Sharing**
+    - Doctors can share prescriptions directly within the chat using a popup form.
+    - Prescription form includes diagnosis, medicines (add/remove), dosage, frequency, duration, and instructions.
+    - Prescriptions appear as visually distinct **green gradient** chat bubbles with structured formatting.
+    - No page navigation required — everything stays within the chat flow.
+
+28. **In-Chat Report Sharing**
+    - All users (Patients, Doctors, Admins) can share medical reports directly in chat.
+    - Dedicated report upload button (📄) accepts PDF, JPG, JPEG, PNG files.
+    - Reports appear as visually distinct **blue gradient** chat bubbles for easy identification.
+    - Files are uploaded to Cloudinary and linked in the chat message.
+
+29. **Production Deployment Configuration**
+    - Environment-variable based backend URL configuration (`VITE_BACKEND_URL`).
+    - Centralized Socket.io connection module with WebSocket-first transport.
+    - Proper CORS whitelist configuration for both Express and Socket.io.
+    - All `localhost` references replaced with environment variable fallbacks.
+    - `.env` files gitignored to prevent secret exposure.
+    - Ready for Render (Backend) and Render/Vercel (Frontend) deployment.
+
+- **Razorpay Sandbox Testing:** Add valid Razorpay keys to environment variables to ensure the checkout iframe doesn't crash on invalid mock keys.

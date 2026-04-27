@@ -34,8 +34,19 @@ const PORT = process.env.PORT || 5000
 
 const app = express()
 
-// Cors
-app.use(cors())
+// Allowed origins for CORS
+const allowedOrigins = [
+    process.env.CLIENT_URL,            // Production frontend (Render)
+    "http://localhost:5173",            // Vite dev server
+    "http://localhost:5000",            // Same-origin in production
+].filter(Boolean)
+
+// CORS configuration
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+}))
 
 //Body-Parser
 app.use(express.json({ limit: '10mb' }))
@@ -44,9 +55,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
     cors: {
-        origin: "*",
-        methods: ["GET", "POST", "PUT", "DELETE"]
-    }
+        origin: allowedOrigins,
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        credentials: true,
+    },
+    transports: ["websocket", "polling"],
 })
 
 // Socket.io logic

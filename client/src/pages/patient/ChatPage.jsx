@@ -1,15 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Send, Paperclip, Phone, Video, MoreVertical } from 'lucide-react';
-import { io } from 'socket.io-client';
+import { Send, Paperclip, Phone, Video, MoreVertical, FileText, Upload } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import axiosInstance from '../../api/axiosInstance';
 import ChatBubble from '../../components/cards/ChatBubble';
 import Button from '../../components/ui/Button';
-
-
-const socket = io("http://localhost:5000");
+import socket from '../../socket';
 
 export default function ChatPage() {
   const [searchParams] = useSearchParams();
@@ -24,6 +21,7 @@ export default function ChatPage() {
   const [activeUser, setActiveUser] = useState(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const reportInputRef = useRef(null);
 
   useEffect(() => {
     fetchConversations();
@@ -145,6 +143,41 @@ export default function ChatPage() {
     }
   };
 
+  // Report upload handler
+  const handleReportUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !activeUser) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('chatFile', file);
+
+    try {
+      const uploadRes = await axiosInstance.post('/messages/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      const res = await axiosInstance.post('/messages/send', {
+        receiverId: activeUser._id,
+        text: `📋 Shared a medical report: ${file.name}`,
+        fileUrl: uploadRes.data.fileUrl
+      });
+
+      const newMsg = res.data;
+      setMessages([...messages, newMsg]);
+
+      const roomId = [user._id, activeUser._id].sort().join('_');
+      socket.emit("send_message", { ...newMsg, room: roomId });
+      toast.success('Report shared with doctor!');
+      fetchConversations();
+    } catch (error) {
+      toast.error('Failed to upload report');
+    } finally {
+      setUploading(false);
+      if (reportInputRef.current) reportInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="flex h-[calc(100vh-8rem)] animate-fade-in bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
 
@@ -237,13 +270,30 @@ export default function ChatPage() {
                 ref={fileInputRef}
                 onChange={handleFileUpload}
               />
+              <input
+                type="file"
+                className="hidden"
+                ref={reportInputRef}
+                onChange={handleReportUpload}
+                accept=".pdf,.jpg,.jpeg,.png"
+              />
               <button
                 type="button"
                 disabled={uploading}
                 onClick={() => fileInputRef.current.click()}
                 className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
+                title="Attach file"
               >
                 <Paperclip className={`w-5 h-5 ${uploading ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => reportInputRef.current.click()}
+                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                title="Share report"
+              >
+                <FileText className={`w-5 h-5 ${uploading ? 'animate-spin' : ''}`} />
               </button>
               <input
                 type="text"
