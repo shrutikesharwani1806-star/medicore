@@ -6,7 +6,7 @@ import Appointment from "../models/apointmentModel.js";
 // Helper to generate a consistent conversation ID between two users
 const getConversationId = (userId1, userId2) => {
     const ids = [userId1.toString(), userId2.toString()].sort();
-    return `conv_${ids[0]}_${ids[1]}`;
+    return `${ids[0]}_${ids[1]}`;
 };
 
 // @desc    Send a message

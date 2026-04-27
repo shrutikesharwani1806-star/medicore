@@ -56,6 +56,10 @@ app.use((req, res, next) => {
     if (req.headers['access-control-request-private-network']) {
         res.setHeader('Access-Control-Allow-Private-Network', 'true');
     }
+    // Handle preflight for PNA
+    if (req.method === 'OPTIONS' && req.headers['access-control-request-private-network']) {
+        return res.sendStatus(204);
+    }
     next();
 })
 
@@ -69,24 +73,29 @@ const io = new Server(httpServer, {
         origin: allowedOrigins,
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization", "Access-Control-Allow-Private-Network"],
     },
     transports: ["websocket", "polling"],
 })
 
 // Socket.io logic
 io.on("connection", (socket) => {
+    console.log(`User connected: ${socket.id}`.cyan)
 
     // Join a conversation room for chat
     socket.on("join_room", (room) => {
         socket.join(room)
+        console.log(`User ${socket.id} joined room: ${room}`.cyan)
     })
 
     // Leave a room
     socket.on("leave_room", (room) => {
         socket.leave(room)
+        console.log(`User ${socket.id} left room: ${room}`.cyan)
     })
 
     socket.on("send_message", (data) => {
+        console.log(`Message sent in room: ${data.room || data.conversationId}`.cyan)
         io.to(data.room || data.conversationId).emit("receive_message", data)
     })
 
@@ -100,6 +109,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("disconnect", () => {
+        console.log(`User disconnected: ${socket.id}`.yellow)
     })
 })
 
