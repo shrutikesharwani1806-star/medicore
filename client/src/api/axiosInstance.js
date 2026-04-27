@@ -1,35 +1,64 @@
-import axios from 'axios';
+import axios from "axios";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:5000';
+// ✅ Base URL (auto switch between local & production)
+const BACKEND_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
+// ✅ Create instance
 const axiosInstance = axios.create({
     baseURL: `${BACKEND_URL}/api`,
     withCredentials: true,
+    timeout: 15000, // prevent hanging requests
     headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
     },
 });
 
-// Attach token to every request
-axiosInstance.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+// ✅ REQUEST INTERCEPTOR (attach token)
+axiosInstance.interceptors.request.use(
+    (config) => {
+        try {
+            const token = localStorage.getItem("token");
 
-// Handle 401 responses (token expired)
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+        } catch (err) {
+            console.error("Token read error:", err);
+        }
+
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// ✅ RESPONSE INTERCEPTOR (handle errors globally)
 axiosInstance.interceptors.response.use(
     (response) => response,
+
     (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            // Only redirect if not already on login page
-            if (!window.location.pathname.includes('/login')) {
-                window.location.href = '/login';
+        const status = error.response?.status;
+
+        // 🔴 Unauthorized → logout
+        if (status === 401) {
+            localStorage.removeItem("token");
+
+            // prevent redirect loop
+            if (!window.location.pathname.includes("/login")) {
+                window.location.href = "/login";
             }
         }
+
+        // 🟠 Server down / network issue
+        if (!error.response) {
+            console.error("Network error / Backend not reachable");
+        }
+
+        // 🟡 Other errors logging (optional)
+        if (status >= 500) {
+            console.error("Server error:", error.response);
+        }
+
         return Promise.reject(error);
     }
 );
