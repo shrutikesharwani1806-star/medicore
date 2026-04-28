@@ -22,7 +22,7 @@ export default function DoctorPendingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50/30 to-accent-50/20 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50/30 to-accent-50/20 flex items-center justify-center p-[4vw] pb-[calc(15vh+env(safe-area-inset-bottom))]">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 text-center animate-scale-in">
         <div className="mx-auto w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center mb-6">
           <Clock className="w-10 h-10 text-amber-500" />

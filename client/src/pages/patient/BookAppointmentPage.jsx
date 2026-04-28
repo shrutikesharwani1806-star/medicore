@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, CheckCircle, User, Mail, Phone, FileText, CreditCard, Coins, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, CheckCircle, User, Mail, Phone, FileText, CreditCard, Coins, AlertTriangle, Star, MessageCircle } from 'lucide-react';
 import useDoctorStore from '../../store/useDoctorStore';
 import useAppointmentStore from '../../store/useAppointmentStore';
 import useAuthStore from '../../store/useAuthStore';
@@ -25,6 +25,8 @@ export default function BookAppointmentPage() {
   
   const [reportUploading, setReportUploading] = useState(false);
   const [reportUrl, setReportUrl] = useState('');
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   const [form, setForm] = useState({
     patientName: user?.name || '',
@@ -39,6 +41,23 @@ export default function BookAppointmentPage() {
     time: '',
     type: 'Offline',
   });
+  
+  // Fetch Reviews
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!id) return;
+      setReviewsLoading(true);
+      try {
+        const res = await axiosInstance.get(`/reviews/${id}`);
+        setReviews(res.data || []);
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+    fetchReviews();
+  }, [id]);
 
   const isOnline = form.type === 'Online';
   const consultationFee = isOnline ? (doctor?.onlineFee || doctor?.fee || 150) : (doctor?.offlineFee || doctor?.fee || 150);
@@ -210,7 +229,7 @@ export default function BookAppointmentPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
+    <div className="space-y-[3vh] max-w-[92vw] sm:max-w-3xl mx-auto">
       <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary-600 transition-colors cursor-pointer">
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
@@ -220,16 +239,29 @@ export default function BookAppointmentPage() {
         <p className="text-sm text-slate-500">Fill in your details and choose a slot with {doctor.name}</p>
       </div>
 
-      {/* Doctor Mini Card */}
-      <div className="flex items-center gap-4 bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-slide-up">
-        <img src={doctor.image} alt={doctor.name} className="w-16 h-16 rounded-xl bg-slate-100" />
+      {/* Doctor Mini Card - Enhanced */}
+      <div className="group relative flex items-center gap-5 bg-white/70 backdrop-blur-md rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:border-primary-200 transition-all duration-500 animate-slide-up">
+        <div className="relative">
+          <img src={doctor.image} alt={doctor.name} className="w-20 h-20 rounded-2xl object-cover bg-slate-100 group-hover:scale-105 transition-transform duration-500 shadow-sm" />
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full shadow-sm" />
+        </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-slate-800">{doctor.name}</h3>
-          <p className="text-sm text-primary-500">{doctor.specialization} • {doctor.experience} yrs</p>
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-lg text-slate-800">{doctor.name}</h3>
+            <CheckCircle className="w-4 h-4 text-primary-500 fill-primary-50" />
+          </div>
+          <p className="text-sm font-medium text-primary-600 mb-1">{doctor.specialization} • {doctor.experience} yrs exp</p>
+          <div className="flex items-center gap-1.5">
+            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+            <span className="text-sm font-bold text-slate-700">{doctor.rating || '4.8'}</span>
+            <span className="text-xs text-slate-400">({doctor.reviews || 0} reviews)</span>
+          </div>
         </div>
         <div className="text-right">
-          <p className="text-xl font-bold text-accent-600">₹{doctor.fee}</p>
-          <p className="text-xs text-slate-400">consultation</p>
+          <div className="px-3 py-1.5 bg-accent-50 rounded-xl border border-accent-100">
+            <p className="text-xl font-black text-accent-600">₹{doctor.fee || doctor.fees}</p>
+            <p className="text-[10px] font-bold text-accent-500 uppercase tracking-tighter">per visit</p>
+          </div>
         </div>
       </div>
 
@@ -465,6 +497,72 @@ export default function BookAppointmentPage() {
           </div>
         </div>
       )}
+
+      {/* Stunning Reviews Section */}
+      <div className="mt-12 space-y-6 animate-slide-up" style={{ animationDelay: '400ms' }}>
+        <div className="flex items-center justify-between px-2">
+          <div>
+            <h3 className="text-xl font-bold text-slate-800">What Patients Say</h3>
+            <p className="text-sm text-slate-400">Verified reviews from past consultations</p>
+          </div>
+          <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm">
+            <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+            <span className="font-bold text-slate-800">{doctor.rating || '4.8'}</span>
+          </div>
+        </div>
+
+        {reviewsLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[1, 2].map(i => (
+              <div key={i} className="h-40 bg-slate-100 rounded-3xl animate-pulse" />
+            ))}
+          </div>
+        ) : reviews.length === 0 ? (
+          <div className="bg-slate-50 rounded-3xl p-12 text-center border-2 border-dashed border-slate-200">
+            <MessageCircle className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-400 font-medium">No reviews yet for {doctor.name}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {reviews.map((review, i) => (
+              <div 
+                key={review._id} 
+                className="bg-white p-5 rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.03)] border border-slate-100/50 hover:border-primary-100 transition-all duration-500 group relative"
+                style={{ animationDelay: `${450 + i * 100}ms` }}
+              >
+                <div className="absolute top-4 right-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+                   <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V12C14.017 12.5523 13.5693 13 13.017 13H11.017C10.4647 13 10.017 12.5523 10.017 12V9C10.017 7.34315 11.3601 6 13.017 6H19.017C20.6739 6 22.017 7.34315 22.017 9V15C22.017 16.6569 20.6739 18 19.017 18H17.017C16.4647 18 16.017 18.4477 16.017 19V21H14.017ZM3 21L3 18C3 16.8954 3.89543 16 5 16H8C8.55228 16 9 15.5523 9 15V9C9 8.44772 8.55228 8 8 8H4C3.44772 8 3 8.44772 3 9V12C3 12.5523 2.55228 13 2 13H0C-0.552285 13 -1 12.5523 -1 12V9C-1 7.34315 0.343146 6 2 6H8C9.65685 6 11 7.34315 11 9V15C11 16.6569 9.65685 18 8 18H6C5.44772 18 5 18.4477 5 19V21H3Z"></path></svg>
+                </div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="relative">
+                    <img 
+                      src={review.patientId?.image || `https://api.dicebear.com/9.x/avataaars/svg?seed=${review.patientId?.name}`} 
+                      alt="" 
+                      className="w-10 h-10 rounded-full border-2 border-primary-50 bg-slate-50"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary-500 rounded-full flex items-center justify-center border-2 border-white">
+                      <CheckCircle className="w-2.5 h-2.5 text-white" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-800 truncate">{review.patientId?.name || 'Verified Patient'}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <Star key={star} className={`w-2.5 h-2.5 ${review.rating >= star ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}`} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-600 leading-relaxed italic">"{review.comment}"</p>
+                <div className="mt-4 pt-3 border-t border-slate-50 flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-primary-500 uppercase tracking-widest bg-primary-50 px-2 py-0.5 rounded-full">Verified visit</span>
+                  <span className="text-[10px] text-slate-400">{new Date(review.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -44,7 +44,7 @@ export default function AIChatbot() {
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-all duration-300 cursor-pointer ${isOpen
+        className={`fixed bottom-[4vh] right-[4vw] z-50 w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-all duration-300 cursor-pointer ${isOpen
           ? 'bg-slate-700 rotate-0 shadow-slate-300/20'
           : 'bg-gradient-to-br from-primary-500 to-accent-500 shadow-primary-300/30 hover:shadow-2xl hover:scale-105'
           }`}
@@ -55,7 +55,7 @@ export default function AIChatbot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-[360px] max-w-[calc(100vw-3rem)] bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-scale-in">
+        <div className="fixed bottom-[13vh] right-[4vw] z-50 w-[360px] max-w-[calc(100vw-3rem)] bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-scale-in">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary-600 to-accent-500 p-4 flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">

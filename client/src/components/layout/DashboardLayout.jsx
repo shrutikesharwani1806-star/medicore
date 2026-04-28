@@ -48,7 +48,7 @@ export default function DashboardLayout() {
   const panel = getPanel();
 
   return (
-    <div className="min-h-screen bg-slate-50/80 flex relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50/80 flex relative">
       {/* Animated background mesh */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary-100/15 rounded-full blur-3xl animate-morph-bg" />
@@ -70,9 +70,9 @@ export default function DashboardLayout() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 min-h-screen overflow-x-hidden">
+      <main className="flex-1 h-dvh overflow-y-auto overflow-x-hidden scroll-smooth">
         {/* Top bar */}
-        <div className="h-14 px-4 lg:px-6 flex items-center justify-between sticky top-0 z-30 bg-white/60 backdrop-blur-2xl border-b border-slate-100/60 shadow-sm shadow-slate-100/30">
+        <div className="h-[8vh] px-[4vw] lg:px-[6vw] flex items-center justify-between sticky top-0 z-30 bg-white/60 backdrop-blur-2xl border-b border-slate-100/60 shadow-sm shadow-slate-100/30">
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center group-hover:shadow-lg group-hover:shadow-primary-300/30 transition-all duration-300 group-hover:scale-105">
               <Heart className="w-4 h-4 text-white fill-white" />
@@ -98,7 +98,7 @@ export default function DashboardLayout() {
             {isLoggedIn && (
               <button
                 onClick={handleLogout}
-                className="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+                className="p-[2vw] rounded-[2vw] text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
                 title="Logout"
                 id="topbar-logout"
               >
@@ -115,7 +115,7 @@ export default function DashboardLayout() {
             </button>
           </div>
         </div>
-        <div className="p-4 lg:p-6">
+        <div className="p-[2vw] lg:p-[4vw] pb-[calc(15vh+env(safe-area-inset-bottom))]">
           <div className="max-w-7xl mx-auto animate-fade-in">
             <Outlet />
           </div>

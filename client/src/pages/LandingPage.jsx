@@ -197,7 +197,7 @@ export default function LandingPage() {
   const [heroParallaxRef, heroOffset] = useParallax(-0.15);
 
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
+    <div className="min-h-screen bg-white overflow-hidden pb-[calc(15vh+env(safe-area-inset-bottom))]">
       <CursorFollower />
       <FloatingParticles />
       <ScrollProgressBar />

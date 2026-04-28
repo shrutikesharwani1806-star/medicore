@@ -13,12 +13,12 @@ function ChatBubble({ message, isOwn }) {
   const isReport = message.text?.startsWith('📋 Shared a medical report:');
 
   return (
-    <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} mb-2 animate-slide-up`}>
+    <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} mb-4 animate-slide-up`}>
       <div
         className={`
-          max-w-[85%] sm:max-w-[70%] px-3 py-2 rounded-2xl shadow-sm relative
+          max-w-[85%] sm:max-w-[70%] px-4 py-2.5 rounded-2xl shadow-sm relative transition-all hover:shadow-md
           ${isOwn 
-            ? 'bg-[#DCF8C6] text-slate-800 rounded-tr-none border border-[#c6e9af]' 
+            ? 'bg-gradient-to-br from-[#E2F7CB] to-[#D1F1AF] text-slate-800 rounded-tr-none border border-[#c6e9af]' 
             : 'bg-white text-slate-800 rounded-tl-none border border-slate-100'}
         `}
       >
@@ -338,7 +338,7 @@ export default function UnifiedChatPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-[#F0F2F5] overflow-hidden font-sans">
+    <div className="flex h-[75vh] w-[100%] max-w-[95vw] mx-auto bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden border border-white/20 font-sans backdrop-blur-xl transition-all duration-700 ease-in-out">
       <PrescriptionModal 
         isOpen={isPrescriptionModalOpen} 
         onClose={() => setIsPrescriptionModalOpen(false)} 
@@ -348,7 +348,7 @@ export default function UnifiedChatPage() {
       {/* Sidebar */}
       <aside className={`
         ${isSidebarOpen ? 'flex' : 'hidden'} sm:flex
-        flex-col w-full sm:w-[350px] md:w-[400px] bg-white border-r border-slate-200
+        flex-col w-full sm:w-[25vw] md:w-[22vw] lg:w-[20vw] bg-white/50 backdrop-blur-md border-r border-slate-100/50
       `}>
         {/* Sidebar Header */}
         <div className="p-3 bg-[#F0F2F5] flex items-center justify-between">
@@ -428,15 +428,16 @@ export default function UnifiedChatPage() {
       {/* Main Chat Area */}
       <main className={`
         ${!isSidebarOpen ? 'flex' : 'hidden'} sm:flex
-        flex-1 flex-col bg-[#E5DDD5] relative
+        flex-1 flex-col bg-[#F8F9FA] relative
       `}>
         {/* Chat Background Pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat"></div>
+        {/* Chat Background Pattern overlay - subtle medical theme or clean pattern */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-repeat"></div>
 
         {activeChat ? (
           <>
             {/* Header */}
-            <header className="z-10 bg-[#F0F2F5] p-3 flex items-center justify-between border-b border-slate-200 shadow-sm">
+            <header className="z-10 bg-white/80 backdrop-blur-md p-4 flex items-center justify-between border-b border-slate-100 shadow-sm">
               <div className="flex items-center gap-3">
                 <button onClick={() => setIsSidebarOpen(true)} className="sm:hidden p-1 mr-1 hover:bg-slate-200 rounded-full transition-colors">
                   <ArrowLeft className="w-5 h-5 text-slate-600" />
@@ -492,8 +493,8 @@ export default function UnifiedChatPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <footer className="z-10 bg-[#F0F2F5] p-3 flex items-center gap-3">
+            {/* Input Area - Refined and floating-style */}
+            <footer className="z-10 bg-white/80 backdrop-blur-md p-4 flex items-center gap-3 border-t border-slate-100">
               <input type="file" className="hidden" ref={fileInputRef} onChange={e => handleFileUpload(e)} />
               <input type="file" className="hidden" ref={reportInputRef} onChange={e => handleFileUpload(e, true)} />
               <div className="p-2 hover:bg-slate-200 rounded-full transition-colors cursor-pointer">
@@ -503,22 +504,24 @@ export default function UnifiedChatPage() {
                   />
               </div>
               <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex-1 flex items-center gap-3">
-                <input
-                  type="text"
-                  placeholder="Type a message"
-                  value={input}
-                  onChange={handleTyping}
-                  className="flex-1 px-4 py-2.5 bg-white rounded-xl text-[15px] focus:outline-none shadow-sm"
-                />
+                <div className="flex-1 relative group">
+                  <input
+                    type="text"
+                    placeholder="Type your message..."
+                    value={input}
+                    onChange={handleTyping}
+                    className="w-full pl-5 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-[14px] focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:bg-white transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] group-focus-within:border-primary-300"
+                  />
+                </div>
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="p-3 bg-[#00A884] text-white rounded-full hover:bg-[#008F72] transition-all disabled:opacity-50 shadow-md active:scale-95"
+                  className="p-3.5 bg-gradient-to-br from-primary-500 to-accent-500 text-white rounded-2xl hover:shadow-lg hover:shadow-primary-500/25 transition-all disabled:opacity-50 disabled:grayscale shadow-md active:scale-95 group"
                 >
-                  <Send className="w-5 h-5" />
+                  <Send className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </button>
               </form>
-            </footer >
+            </footer>
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-[#F8F9FA] z-10">

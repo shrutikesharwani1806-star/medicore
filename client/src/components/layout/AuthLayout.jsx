@@ -11,7 +11,7 @@ export default function AuthLayout() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-[4vw] pb-[calc(12vh+env(safe-area-inset-bottom))] relative overflow-hidden">
       {/* Background Video */}
       <video
         autoPlay
