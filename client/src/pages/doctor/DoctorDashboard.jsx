@@ -214,11 +214,12 @@ export default function DoctorDashboard() {
       </div>
 
       {/* Stats Row 1 - Appointments */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Appointments" value={myAppts.length} icon={Calendar} color="primary" trend={8} onClick={() => navigate('/doctor/appointments')} />
-        <StatCard title="My Patients" value={uniquePatients} icon={Users} color="accent" trend={12} onClick={() => navigate('/doctor/patients')} />
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatCard title="Total Appointments" value={myAppts.length} icon={Calendar} color="primary" onClick={() => navigate('/doctor/appointments')} />
+        <StatCard title="My Patients" value={uniquePatients} icon={Users} color="accent" onClick={() => navigate('/doctor/patients')} />
         <StatCard title="Pending" value={pendingAppts.length} icon={Clock} color="amber" onClick={() => navigate('/doctor/appointments')} />
-        <StatCard title="Completed" value={myAppts.filter(a => a.status === 'completed').length} icon={Activity} color="purple" trend={5} onClick={() => navigate('/doctor/appointments')} />
+        <StatCard title="Personal Bookings" value={personalAppointments.length} icon={Heart} color="rose" onClick={() => navigate('/doctor/personal-appointments')} />
+        <StatCard title="Completed" value={myAppts.filter(a => a.status === 'completed').length} icon={Activity} color="purple" onClick={() => navigate('/doctor/appointments')} />
       </div>
 
       {/* Stats Row 2 - Financial */}

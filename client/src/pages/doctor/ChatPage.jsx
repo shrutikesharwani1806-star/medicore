@@ -188,6 +188,32 @@ export default function DoctorChatPage() {
     }
   };
 
+  const handleDeleteMessage = async (msgId) => {
+    if (!window.confirm('Delete this message?')) return;
+    try {
+      await axiosInstance.delete(`/messages/${msgId}`);
+      setMessages(messages.filter(m => m._id !== msgId));
+      toast.success('Message deleted');
+    } catch (error) {
+      toast.error('Failed to delete message');
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!activeUser) return;
+    if (!window.confirm(`Are you sure you want to delete the entire conversation with ${activeUser.name}?`)) return;
+
+    try {
+      const roomId = [user._id, activeUser._id].sort().join('_');
+      await axiosInstance.delete(`/messages/conversations/${roomId}`);
+      setMessages([]);
+      toast.success('Conversation deleted');
+      fetchConversations();
+    } catch (error) {
+      toast.error('Failed to delete conversation');
+    }
+  };
+
   // Prescription helpers
   const addMedicine = () => {
     setRxMedicines([...rxMedicines, { id: Date.now(), medicine: '', dosage: '', frequency: 'Once daily', duration: '7 days' }]);
@@ -277,7 +303,9 @@ export default function DoctorChatPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start mb-0.5">
-                  <p className="text-sm font-bold text-slate-800 truncate">{conv.otherUser?.name}</p>
+                  <p className="text-sm font-bold text-slate-800 truncate">
+                    {conv.otherUser?._id === user?._id ? 'You' : conv.otherUser?.name}
+                  </p>
                   <span className="text-[10px] text-slate-400 font-medium">
                     {new Date(conv.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
@@ -303,7 +331,9 @@ export default function DoctorChatPage() {
                   className="w-10 h-10 rounded-xl bg-slate-100"
                 />
                 <div>
-                  <h3 className="font-semibold text-slate-800 text-sm">{activeUser.name}</h3>
+                  <h3 className="font-semibold text-slate-800 text-sm">
+                    {activeUser._id === user?._id ? 'You' : activeUser.name}
+                  </h3>
                   <p className="text-xs text-green-500">Patient</p>
                 </div>
               </div>
@@ -321,6 +351,7 @@ export default function DoctorChatPage() {
                   variant="outline"
                   size="sm"
                   icon={Video}
+                  disabled={activeUser._id === user?._id}
                   onClick={() => {
                     const ids = [user._id, activeUser._id].sort();
                     navigate(`/video-call/chat-${ids[0]}-${ids[1]}`);
@@ -329,6 +360,13 @@ export default function DoctorChatPage() {
                 >
                   Video Call
                 </Button>
+                <button
+                  onClick={handleDeleteConversation}
+                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                  title="Delete entire chat"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
@@ -338,6 +376,7 @@ export default function DoctorChatPage() {
                   key={msg._id}
                   message={msg}
                   isOwn={(msg.senderId?._id || msg.senderId) === user?._id}
+                  onDelete={handleDeleteMessage}
                 />
               ))}
               <div ref={bottomRef} />

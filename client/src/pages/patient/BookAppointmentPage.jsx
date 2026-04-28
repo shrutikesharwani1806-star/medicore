@@ -22,6 +22,9 @@ export default function BookAppointmentPage() {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsMessage, setSlotsMessage] = useState('');
+  
+  const [reportUploading, setReportUploading] = useState(false);
+  const [reportUrl, setReportUrl] = useState('');
 
   const [form, setForm] = useState({
     patientName: user?.name || '',
@@ -39,7 +42,15 @@ export default function BookAppointmentPage() {
 
   const isOnline = form.type === 'Online';
   const consultationFee = isOnline ? (doctor?.onlineFee || doctor?.fee || 150) : (doctor?.offlineFee || doctor?.fee || 150);
-  const upfrontCost = isOnline ? 50 : (consultationFee + 50);
+  const upfrontCost = 50; // Only booking fee is paid upfront now
+
+  // Redirect if doctor tries to book themselves
+  useEffect(() => {
+    if (user?.isDoctor && user?._id === id) {
+      toast.error("Doctors cannot book appointments with themselves.");
+      navigate('/doctor');
+    }
+  }, [user, id, navigate]);
 
   useEffect(() => {
     if (!doctor && doctors.length === 0) {
@@ -82,6 +93,31 @@ export default function BookAppointmentPage() {
     setSlotsLoading(false);
   };
 
+  const handleReportUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      return toast.error("File size must be less than 5MB");
+    }
+
+    const formData = new FormData();
+    formData.append('chatFile', file); // Backend expects 'chatFile' as per messageRoutes.js/uploadMiddleware.js
+
+    setReportUploading(true);
+    try {
+      const res = await axiosInstance.post('/messages/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setReportUrl(res.data.fileUrl);
+      toast.success("Medical report uploaded successfully!");
+    } catch (error) {
+      toast.error("Failed to upload report. Please try again.");
+    } finally {
+      setReportUploading(false);
+    }
+  };
+
   if (!doctor) {
     return (
       <div className="text-center py-20">
@@ -109,6 +145,12 @@ export default function BookAppointmentPage() {
       return;
     }
 
+    // Check if pending doctor
+    if (user?.role === 'doctor' && !user?.isActive) {
+      toast.error("Your account is pending approval. You cannot book appointments in demo mode.");
+      return;
+    }
+
     // Check credits
     if ((user?.credits || 0) < upfrontCost) {
       toast.error(`Insufficient credits! You need ₹${upfrontCost}. Current: ₹${user?.credits || 0}`);
@@ -118,12 +160,13 @@ export default function BookAppointmentPage() {
     setLoading(true);
     try {
       const result = await bookAppointment({
-        doctorId: doctor.id,
+        doctorId: doctor.id || doctor._id,
         date: form.date,
-        time: form.time,
+        slot: form.time, // Appointment model expects 'slot'
         type: form.type,
         reason: form.reason,
         symptoms: form.reason,
+        report: reportUrl,
       });
       // Update credits in store
       if (result?.creditsRemaining !== undefined) {
@@ -154,7 +197,8 @@ export default function BookAppointmentPage() {
             <p>📅 {form.date}</p>
             <p>🕐 {form.time}</p>
             <p>📋 {form.type} — {form.reason || 'General'}</p>
-            <p>💰 ₹{upfrontCost} deducted from credits</p>
+            {reportUrl && <p className="text-green-600 font-medium">📄 Report Attached</p>}
+            <p>💰 ₹${upfrontCost} deducted from credits</p>
           </div>
           <div className="space-y-3">
             <Button onClick={() => navigate('/patient/appointments')} className="w-full">View My Appointments</Button>
@@ -207,7 +251,7 @@ export default function BookAppointmentPage() {
       <div className="flex items-center gap-3 bg-primary-50 border border-primary-100 rounded-xl p-3 animate-slide-up">
         <Coins className="w-5 h-5 text-primary-500" />
         <div className="flex-1 text-xs text-primary-700">
-          <span className="font-medium">Upfront Cost:</span> {isOnline ? `₹50 booking fee (₹${consultationFee} consultation fee paid later)` : `₹${consultationFee} consultation + ₹50 booking fee`} = <strong>₹{upfrontCost} today</strong>
+          <span className="font-medium">Upfront Cost:</span> ₹50 Booking Fee (₹{consultationFee} consultation fee to be paid after visit) = <strong>₹50 today</strong>
         </div>
         <span className="text-sm font-bold text-primary-700">Balance: ₹{user?.credits || 0}</span>
       </div>
@@ -260,6 +304,42 @@ export default function BookAppointmentPage() {
                 {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <option key={bg}>{bg}</option>)}
               </select>
             </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-500 mb-1 block">Medical Report (Optional)</label>
+            <div className="flex items-center gap-3">
+              <input 
+                type="file" 
+                id="report-upload"
+                className="hidden"
+                onChange={handleReportUpload}
+                accept=".pdf,.jpg,.jpeg,.png,.docx"
+              />
+              <label 
+                htmlFor="report-upload" 
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
+                  reportUrl ? 'bg-green-50 border-green-200 text-green-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-primary-300 hover:bg-primary-50'
+                }`}
+              >
+                {reportUploading ? (
+                  <><div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" /> Uploading...</>
+                ) : reportUrl ? (
+                  <><CheckCircle className="w-4 h-4" /> Report Attached</>
+                ) : (
+                  <><FileText className="w-4 h-4" /> Click to upload medical report</>
+                )}
+              </label>
+              {reportUrl && (
+                <button 
+                  type="button" 
+                  onClick={() => setReportUrl('')} 
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] text-slate-400 mt-1">Max size 5MB. Supported: PDF, JPG, PNG, DOCX</p>
           </div>
           <div>
             <label className="text-xs font-medium text-slate-500 mb-1 block">Reason for Visit</label>

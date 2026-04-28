@@ -8,35 +8,31 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/login" replace />;
   }
 
-  // Strict role isolation
-  if (allowedRoles) {
-    // Doctor routes
-    if (allowedRoles.includes('doctor')) {
-      if (role !== 'doctor') {
-        // Redirect non-doctors to their own dashboard
-        const path = role === 'admin' ? '/admin' : '/patient';
-        return <Navigate to={path} replace />;
-      }
-      if (!isApproved) {
+  // Strictly block pending doctors from professional dashboards, but allow demo on patient-side
+  if (role === 'doctor') {
+    if (!isApproved) {
+      // If they are trying to access professional doctor routes, redirect to pending page
+      if (allowedRoles && allowedRoles.includes('doctor') && !allowedRoles.includes('patient')) {
         return <Navigate to="/doctor-pending" replace />;
       }
-    }
-
-    // Admin routes
-    if (allowedRoles.includes('admin')) {
-      if (role !== 'admin') {
-        const path = role === 'doctor' ? '/doctor' : '/patient';
-        return <Navigate to={path} replace />;
+    } else if (!profileCompleted) {
+      // If approved but profile not complete, force them to profile setup
+      // Allow them to stay ON the profile page though!
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/doctor/profile' && allowedRoles && allowedRoles.includes('doctor')) {
+        return <Navigate to="/doctor/profile" replace />;
       }
     }
+  }
 
-    // Patient routes
-    if (allowedRoles.includes('patient')) {
-      if (role !== 'patient') {
-        const path = role === 'admin' ? '/admin' : role === 'doctor' ? '/doctor' : '/patient';
-        return <Navigate to={path} replace />;
-      }
-    }
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    // If user doesn't have permission, redirect to their role's default dashboard
+    const defaultPaths = {
+      admin: '/admin',
+      doctor: isApproved ? '/doctor' : '/doctor-pending',
+      patient: '/patient'
+    };
+    return <Navigate to={defaultPaths[role] || '/'} replace />;
   }
 
   return children;

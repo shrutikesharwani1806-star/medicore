@@ -7,6 +7,7 @@ const router = express.Router()
 router.post("/register", authController.registerUser)
 router.post("/login", authController.loginUser)
 router.get("/me", protect.forUser, authController.getMe)
+router.put("/profile", protect.forUser, authController.updateUserProfile)
 router.post("/private", protect.forUser, authController.privateController)
 
 // Forgot Password Routes

@@ -14,6 +14,8 @@ export const addReview = asyncHandler(async (req, res) => {
         throw new Error("Please provide all required fields (doctorId, rating, comment).");
     }
 
+    console.log(`Submitting review: Patient ${patientId} -> Doctor ${doctorId}, Rating: ${rating}`);
+
     // Check if patient has any confirmed or completed appointment with this doctor
     const appointment = await Appointment.findOne({
         patientId,
@@ -22,6 +24,7 @@ export const addReview = asyncHandler(async (req, res) => {
     });
 
     if (!appointment) {
+        console.log(`Review failed: No confirmed/completed appointment found for Patient ${patientId} and Doctor ${doctorId}`);
         res.status(403);
         throw new Error("You can only review a doctor you have had an appointment with.");
     }
@@ -29,6 +32,7 @@ export const addReview = asyncHandler(async (req, res) => {
     // Check if review already exists for this patient-doctor pair
     const existingReview = await Review.findOne({ patientId, doctorId });
     if (existingReview) {
+        console.log(`Review failed: Existing review found for Patient ${patientId} and Doctor ${doctorId}`);
         res.status(400);
         throw new Error("You have already reviewed this doctor.");
     }
@@ -41,13 +45,18 @@ export const addReview = asyncHandler(async (req, res) => {
     });
 
     // Update doctor's average rating
-    const doctor = await User.findById(doctorId);
-    if (doctor) {
-        const reviews = await Review.find({ doctorId });
-        const totalRating = reviews.reduce((sum, rev) => sum + rev.rating, 0);
-        doctor.averageRating = totalRating / reviews.length;
-        doctor.totalRatings = reviews.length;
-        await doctor.save();
+    try {
+        const doctor = await User.findById(doctorId);
+        if (doctor) {
+            const reviews = await Review.find({ doctorId });
+            const totalRating = reviews.reduce((sum, rev) => sum + rev.rating, 0);
+            doctor.averageRating = totalRating / reviews.length;
+            doctor.totalRatings = reviews.length;
+            await doctor.save();
+            console.log(`Doctor stats updated: ${doctor.name}, Avg: ${doctor.averageRating}, Total: ${doctor.totalRatings}`);
+        }
+    } catch (err) {
+        console.error("Error updating doctor rating:", err);
     }
 
     res.status(201).json(review);

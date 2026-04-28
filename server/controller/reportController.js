@@ -28,12 +28,7 @@ export const analyzeReport = asyncHandler(async (req, res) => {
 
 // GET /api/report/user/:uid?
 export const getUserReports = asyncHandler(async (req, res) => {
-    const uid = req.params.uid || req.user._id;
-
-    if (uid.toString() !== req.user._id.toString() && !req.user.isAdmin && req.user.role !== 'doctor') {
-        res.status(403);
-        throw new Error("Not authorized to view these reports");
-    }
+    const uid = req.user._id;
 
     const reports = await Report.find({ patientId: uid }).sort({ createdAt: -1 });
 

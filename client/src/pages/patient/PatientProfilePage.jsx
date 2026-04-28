@@ -58,7 +58,7 @@ export default function PatientProfilePage() {
           </div>
           <div className="mt-3">
             <h2 className="text-xl font-bold text-slate-800">{form.name}</h2>
-            <p className="text-sm text-slate-500">Patient</p>
+            <p className="text-sm text-slate-500 capitalize">{user?.role || 'Patient'}</p>
           </div>
         </div>
       </div>

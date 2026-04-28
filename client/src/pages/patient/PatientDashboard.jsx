@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ArrowRight, Calendar, Clock, TrendingUp, Stethoscope, Heart, Activity, Pill, DollarSign, FileText } from 'lucide-react';
+import { Search, ArrowRight, Calendar, Clock, TrendingUp, Stethoscope, Heart, Activity, Pill, DollarSign, FileText, AlertTriangle } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useDoctorStore from '../../store/useDoctorStore';
 import useAppointmentStore from '../../store/useAppointmentStore';
@@ -94,6 +94,40 @@ export default function PatientDashboard() {
           </form>
         </div>
       </div>
+
+      {/* Demo Mode Banner for Pending Doctors */}
+      {user?.role === 'doctor' && !user?.isActive && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3 animate-pulse-subtle shadow-sm">
+          <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-amber-800 text-sm">Demo Mode</h3>
+            <p className="text-xs text-amber-600 mt-0.5">Your doctor account is pending approval. You are currently viewing the platform in demo mode.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Payment Warning */}
+      {paymentRequests.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse-subtle shadow-sm">
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-red-800 text-sm">Payment Required</h3>
+              <p className="text-xs text-red-600 mt-0.5">You have {paymentRequests.length} pending consultation fees. Please pay them to unlock new bookings.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/patient/payment-requests')}
+            className="px-5 py-2.5 bg-red-600 text-white text-xs font-bold rounded-xl hover:bg-red-700 transition-all shadow-md shadow-red-200 cursor-pointer whitespace-nowrap"
+          >
+            Pay Now
+          </button>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">

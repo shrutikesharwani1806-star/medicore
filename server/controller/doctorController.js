@@ -94,8 +94,20 @@ const getAllPatients = asyncHandler(async (req, res) => {
 // @route   GET /api/doctor/patient/:id
 const getSinglePatient = asyncHandler(async (req, res) => {
     const patientId = req.params.id;
+    const doctorId = req.user._id;
 
-    const patient = await User.findById(patientId).select("-password");
+    // Check if doctor has ever had an appointment with this patient
+    const hasRelationship = await Appointment.exists({
+        patientId,
+        doctorId
+    });
+
+    if (!hasRelationship && !req.user.isAdmin) {
+        res.status(403);
+        throw new Error("Not authorized! You can only view details of your own patients.");
+    }
+
+    const patient = await User.findById(patientId).select("-password -isAdmin -isBlocked -resetPasswordOtp -resetPasswordExpires");
 
     if (!patient) {
         res.status(404);
@@ -104,7 +116,7 @@ const getSinglePatient = asyncHandler(async (req, res) => {
 
     const history = await Appointment.find({
         patientId,
-        doctorId: req.user._id
+        doctorId
     }).sort({ createdAt: -1 });
 
     const reports = await Report.find({ patientId }).sort({ createdAt: -1 });

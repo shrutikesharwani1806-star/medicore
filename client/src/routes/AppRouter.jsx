@@ -20,7 +20,6 @@ import FindDoctorPage from '../pages/patient/FindDoctorPage';
 import DoctorProfilePage from '../pages/patient/DoctorProfilePage';
 import BookAppointmentPage from '../pages/patient/BookAppointmentPage';
 import MyAppointmentsPage from '../pages/patient/MyAppointmentsPage';
-import ChatPage from '../pages/patient/ChatPage';
 import ReportsPage from '../pages/patient/ReportsPage';
 import PatientProfilePage from '../pages/patient/PatientProfilePage';
 import BuyCreditsPage from '../pages/patient/BuyCreditsPage';
@@ -34,8 +33,9 @@ import PatientListPage from '../pages/doctor/PatientListPage';
 import PrescriptionPage from '../pages/doctor/PrescriptionPage';
 import DoctorProfilePageDoc from '../pages/doctor/DoctorProfilePage';
 import PatientDetailsPage from '../pages/doctor/PatientDetailsPage';
-import DoctorChatPage from '../pages/doctor/ChatPage';
 import DoctorBuyCreditsPage from '../pages/doctor/DoctorBuyCreditsPage';
+import DoctorPersonalAppointmentsPage from '../pages/doctor/DoctorPersonalAppointmentsPage';
+
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -46,6 +46,7 @@ import CreditsManagementPage from '../pages/admin/CreditsManagementPage';
 import AdminAppointmentsPage from '../pages/admin/AdminAppointmentsPage';
 import AdminDoctorDetailsPage from '../pages/admin/AdminDoctorDetailsPage';
 import AppointmentDetailsPage from '../pages/common/AppointmentDetailsPage';
+import UnifiedChatPage from '../pages/UnifiedChatPage';
 
 const router = createBrowserRouter([
   // Landing Page - the first page users see
@@ -80,7 +81,7 @@ const router = createBrowserRouter([
   {
     path: '/patient',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={['patient', 'admin', 'doctor']}>
         <DashboardLayout />
       </ProtectedRoute>
     ),
@@ -88,7 +89,7 @@ const router = createBrowserRouter([
       { index: true, element: <PatientDashboard /> },
       { path: 'book/:id', element: <BookAppointmentPage /> },
       { path: 'appointments', element: <MyAppointmentsPage /> },
-      { path: 'chat', element: <ChatPage /> },
+      { path: 'chat', element: <Navigate to="/chat" replace /> },
       { path: 'reports', element: <ReportsPage /> },
       { path: 'profile', element: <PatientProfilePage /> },
       { path: 'buy-credits', element: <BuyCreditsPage /> },
@@ -107,12 +108,12 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <DoctorDashboard /> },
       { path: 'appointments', element: <DoctorAppointmentsPage /> },
-      { path: 'personal-appointments', element: <MyAppointmentsPage /> },
+      { path: 'personal-appointments', element: <DoctorPersonalAppointmentsPage /> },
       { path: 'patients', element: <PatientListPage /> },
       { path: 'prescriptions', element: <PrescriptionPage /> },
       { path: 'profile', element: <DoctorProfilePageDoc /> },
       { path: 'patient/:id', element: <PatientDetailsPage /> },
-      { path: 'chat', element: <DoctorChatPage /> },
+      { path: 'chat', element: <Navigate to="/chat" replace /> },
       { path: 'buy-credits', element: <DoctorBuyCreditsPage /> },
     ],
   },
@@ -133,6 +134,7 @@ const router = createBrowserRouter([
       { path: 'analytics', element: <AnalyticsPage /> },
       { path: 'credits', element: <CreditsManagementPage /> },
       { path: 'doctor/:id', element: <AdminDoctorDetailsPage /> },
+      { path: 'personal-appointments', element: <MyAppointmentsPage /> },
     ],
   },
 
@@ -146,6 +148,19 @@ const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <AppointmentDetailsPage /> }
+    ]
+  },
+
+  // Unified Chat Route
+  {
+    path: '/chat',
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <UnifiedChatPage /> }
     ]
   },
 

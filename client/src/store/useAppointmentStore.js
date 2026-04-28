@@ -75,7 +75,7 @@ const useAppointmentStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post(`/appointment/book/${appointmentData.doctorId}`, {
         date: appointmentData.date,
-        slot: appointmentData.time,
+        slot: appointmentData.slot || appointmentData.time,
         symptoms: appointmentData.reason || appointmentData.symptoms,
         type: appointmentData.type,
         report: appointmentData.report,

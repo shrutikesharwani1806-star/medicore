@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { specializations } from '../data/mockData';
 import useDoctorStore from '../store/useDoctorStore';
+import useAuthStore from '../store/useAuthStore';
 import Doctor3DModel from '../components/ui/Doctor3DModel';
 import { ScrollReveal, useParallax, useScrollProgress } from '../hooks/useScrollEffects';
 
@@ -185,6 +186,7 @@ function AnimatedCounter({ target, label, suffix = '' }) {
 export default function LandingPage() {
   const navigate = useNavigate();
   const { doctors: storeDoctors, fetchPublicDoctors } = useDoctorStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     fetchPublicDoctors();
@@ -215,8 +217,15 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/patient" className="hidden sm:block text-sm font-medium text-slate-600 hover:text-primary-600 transition-colors">Dashboard</Link>
-            <Link to="/login" className="px-5 py-2 bg-gradient-to-r from-primary-600 to-primary-500 text-white text-sm font-medium rounded-xl hover:from-primary-700 hover:to-primary-600 transition-all shadow-sm shadow-primary-200 hover:shadow-lg hover:shadow-primary-300/40 hover:-translate-y-0.5 active:translate-y-0">
+            {user && (
+              <Link
+                to={user.role === 'admin' ? '/admin' : (user.role === 'doctor' && !user.isActive) ? '/patient' : user.role === 'doctor' ? '/doctor' : '/patient'}
+                className="hidden sm:block text-sm font-medium text-slate-600 hover:text-primary-600 transition-colors"
+              >
+                Dashboard
+              </Link>
+            )}
+            <Link to={user ? '/patient' : '/login'} className="px-5 py-2 bg-gradient-to-r from-primary-600 to-primary-500 text-white text-sm font-medium rounded-xl hover:from-primary-700 hover:to-primary-600 transition-all shadow-sm shadow-primary-200 hover:shadow-lg hover:shadow-primary-300/40 hover:-translate-y-0.5 active:translate-y-0">
               Get Started
             </Link>
           </div>

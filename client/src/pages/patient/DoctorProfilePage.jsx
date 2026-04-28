@@ -2,13 +2,23 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Clock, Users, Award, MapPin, Calendar, ArrowLeft, MessageCircle } from 'lucide-react';
 import useDoctorStore from '../../store/useDoctorStore';
+import useAuthStore from '../../store/useAuthStore';
 import Button from '../../components/ui/Button';
 import axiosInstance from '../../api/axiosInstance';
 
 export default function DoctorProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const { getDoctorById, fetchPublicDoctors, doctors, loading } = useDoctorStore();
+
+  // Redirect if doctor tries to view their own public profile
+  useEffect(() => {
+    if (user?.isDoctor && user?._id === id) {
+      navigate('/doctor');
+    }
+  }, [user, id, navigate]);
+
   const doctor = getDoctorById(id);
   const [reviews, setReviews] = useState([]);
 
@@ -154,7 +164,7 @@ export default function DoctorProfilePage() {
           variant="outline"
           className="px-6 text-primary-600 border-primary-200 hover:bg-primary-50"
           icon={MessageCircle}
-          onClick={() => navigate(`/patient/chat?userId=${doctor._id || doctor.id}`)}
+          onClick={() => navigate(`/chat?userId=${doctor._id || doctor.id}`)}
         >
           Chat
         </Button>

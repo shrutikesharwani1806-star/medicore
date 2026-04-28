@@ -8,6 +8,9 @@ const router = express.Router();
 // Send a message (with optional file upload)
 router.post("/send", protect.forUser, messageController.sendMessage);
 
+// Get or create conversation
+router.post("/get-or-create", protect.forUser, messageController.getOrCreateConversation);
+
 // Get conversation list for current user
 router.get("/conversations/list", protect.forUser, messageController.getConversations);
 

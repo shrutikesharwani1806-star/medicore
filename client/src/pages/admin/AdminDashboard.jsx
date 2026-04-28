@@ -106,7 +106,8 @@ export default function AdminDashboard() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold">System Overview 🏥</h1>
           <p className="text-slate-400 text-sm mt-2">
-            {pendingDoctors.length} pending approvals • {appointments.filter(a => a.status === 'pending').length} pending appointments
+            {pendingDoctors.length} pending approvals • {appointments.filter(a => a.status === 'pending').length} pending appointments • 
+            <button onClick={() => navigate('/admin/personal-appointments')} className="text-primary-300 hover:underline ml-1 cursor-pointer">My Bookings</button>
           </p>
         </div>
       </div>

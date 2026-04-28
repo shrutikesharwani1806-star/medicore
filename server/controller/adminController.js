@@ -105,7 +105,7 @@ const updateUser = async (req, res) => {
         }
 
         if (credits !== undefined) {
-            updateData.credits = user.credits + parseInt(credits);
+            updateData.credits = (user.credits || 0) + Number(credits);
         }
 
         if (Object.keys(updateData).length === 0) {

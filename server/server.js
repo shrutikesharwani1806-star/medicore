@@ -78,9 +78,21 @@ const io = new Server(httpServer, {
     transports: ["websocket", "polling"],
 })
 
+// Store online users: userId -> socketId
+const onlineUsers = new Map();
+
 // Socket.io logic
 io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.id}`.cyan)
+    console.log(`User connected: ${socket.id}`.cyan);
+
+    // Register user as online
+    socket.on("register_user", (userId) => {
+        if (userId) {
+            onlineUsers.set(userId, socket.id);
+            console.log(`User ${userId} is now online`.green);
+            io.emit("online_users", Array.from(onlineUsers.keys()));
+        }
+    });
 
     // Join a conversation room for chat
     socket.on("join_room", (room) => {
@@ -99,16 +111,22 @@ io.on("connection", (socket) => {
         io.to(data.room || data.conversationId).emit("receive_message", data)
     })
 
-    socket.on("send_notification", (data) => {
-        io.emit("receive_notification", data)
-    })
-
-    // Typing indicator
+    // Typing indicators
     socket.on("typing", (data) => {
-        socket.to(data.room || data.conversationId).emit("user_typing", data)
-    })
+        // data: { room, userId, isTyping }
+        socket.to(data.room).emit("user_typing", data);
+    });
 
     socket.on("disconnect", () => {
+        // Find and remove user from online list
+        for (let [userId, socketId] of onlineUsers.entries()) {
+            if (socketId === socket.id) {
+                onlineUsers.delete(userId);
+                console.log(`User ${userId} is now offline`.yellow);
+                break;
+            }
+        }
+        io.emit("online_users", Array.from(onlineUsers.keys()));
         console.log(`User disconnected: ${socket.id}`.yellow)
     })
 })

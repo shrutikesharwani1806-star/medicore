@@ -205,7 +205,9 @@ export default function ChatPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start mb-0.5">
-                  <p className="text-sm font-bold text-slate-800 truncate">{conv.otherUser?.name}</p>
+                  <p className="text-sm font-bold text-slate-800 truncate">
+                    {conv.otherUser?._id === user?._id ? 'You' : conv.otherUser?.name}
+                  </p>
                   <span className="text-[10px] text-slate-400 font-medium">
                     {new Date(conv.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
@@ -231,7 +233,9 @@ export default function ChatPage() {
                   className="w-10 h-10 rounded-xl bg-slate-100"
                 />
                 <div>
-                  <h3 className="font-semibold text-slate-800 text-sm">{activeUser.name}</h3>
+                  <h3 className="font-semibold text-slate-800 text-sm">
+                    {activeUser._id === user?._id ? 'You' : activeUser.name}
+                  </h3>
                   <p className="text-xs text-primary-500">Doctor</p>
                 </div>
               </div>
@@ -239,6 +243,7 @@ export default function ChatPage() {
                 variant="outline"
                 size="sm"
                 icon={Video}
+                disabled={activeUser._id === user?._id}
                 onClick={() => {
                   const ids = [user._id, activeUser._id].sort();
                   navigate(`/video-call/chat-${ids[0]}-${ids[1]}`);

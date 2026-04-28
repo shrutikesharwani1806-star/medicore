@@ -96,20 +96,65 @@ export default function AdminDoctorDetailsPage() {
                                 </div>
                             </div>
 
-                            <div className="mt-6 space-y-2">
-                                {!doctor.approved && (
-                                    <Button className="w-full" variant="success" icon={CheckCircle} onClick={handleApprove}>
-                                        Approve Doctor
+                             <div className="mt-6 space-y-3">
+                                {/* Credit Management Section */}
+                                <div className="p-4 bg-primary-50 rounded-2xl border border-primary-100 text-left">
+                                    <h4 className="text-xs font-bold text-primary-800 mb-2 flex items-center gap-2">
+                                        <Shield className="w-3.5 h-3.5" /> Credits: ₹{doctor.credits || 0}
+                                    </h4>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="number"
+                                            placeholder="Amount..."
+                                            id="add-credits-input-doc"
+                                            className="flex-1 px-3 py-1.5 bg-white rounded-lg border border-primary-200 text-xs focus:outline-none focus:ring-2 focus:ring-primary-300"
+                                        />
+                                        <Button
+                                            size="sm"
+                                            onClick={async () => {
+                                                const amount = document.getElementById('add-credits-input-doc').value;
+                                                if (!amount || amount <= 0) return toast.error('Enter valid amount');
+                                                try {
+                                                    const res = await axiosInstance.put(`/admin/users/${doctor.userId?._id || doctor._id}`, { credits: amount });
+                                                    setDoctor({ ...doctor, credits: res.data.credits });
+                                                    document.getElementById('add-credits-input-doc').value = '';
+                                                    toast.success(`₹${amount} added successfully!`);
+                                                } catch (error) {
+                                                    toast.error('Failed to add credits');
+                                                }
+                                            }}
+                                        >
+                                            Add
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <Button
+                                        className="flex-1"
+                                        variant={doctor.isActive ? "warning" : "success"}
+                                        icon={doctor.isActive ? XCircle : CheckCircle}
+                                        onClick={async () => {
+                                            try {
+                                                await axiosInstance.put(`/admin/users/${doctor.userId?._id || doctor._id}`, { isActive: !doctor.isActive });
+                                                setDoctor({ ...doctor, isActive: !doctor.isActive });
+                                                toast.success(doctor.isActive ? 'Doctor deactivated' : 'Doctor activated');
+                                            } catch (error) {
+                                                toast.error('Failed to update status');
+                                            }
+                                        }}
+                                    >
+                                        {doctor.isActive ? 'Deactivate' : 'Activate'}
                                     </Button>
-                                )}
-                                <Button
-                                    className="w-full"
-                                    variant={doctor.isBlocked ? "outline" : "danger"}
-                                    icon={Shield}
-                                    onClick={handleBlockToggle}
-                                >
-                                    {doctor.isBlocked ? 'Unblock Doctor' : 'Block Doctor'}
-                                </Button>
+                                    <Button
+                                        className="flex-1"
+                                        variant={doctor.isBlocked ? "outline" : "danger"}
+                                        icon={Shield}
+                                        onClick={handleBlockToggle}
+                                    >
+                                        {doctor.isBlocked ? 'Unblock' : 'Block'}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>

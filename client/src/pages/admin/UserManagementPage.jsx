@@ -162,13 +162,7 @@ export default function UserManagementPage() {
                     )}
                   </td>
                   <td className="px-5 py-3.5 text-right space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => {
-                      if (user.role === 'doctor') {
-                        navigate(`/admin/doctor/${user._id}`);
-                      } else {
-                        handleViewUser(user);
-                      }
-                    }}>
+                    <Button variant="outline" size="sm" onClick={() => handleViewUser(user)}>
                       View Details
                     </Button>
                   </td>
@@ -197,13 +191,78 @@ export default function UserManagementPage() {
                     {selectedUser?.isBlocked && <Badge status="rejected">Blocked</Badge>}
                   </div>
                 </div>
-                <div className="ml-auto">
+                <div className="ml-auto flex gap-2">
+                  <Button
+                    variant={selectedUser?.isActive ? "warning" : "success"}
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const res = await axiosInstance.put(`/admin/users/${selectedUser._id}`, {
+                          isActive: !selectedUser.isActive
+                        });
+                        // Update local state
+                        if (selectedUser.role === 'doctor') {
+                          setDoctors(doctors.map(d => d._id === selectedUser._id ? { ...d, isActive: !selectedUser.isActive } : d));
+                        } else {
+                          setPatients(patients.map(p => p._id === selectedUser._id ? { ...p, isActive: !selectedUser.isActive } : p));
+                        }
+                        toast.success(selectedUser.isActive ? 'Account deactivated' : 'Account activated');
+                        setSelectedUser({ ...selectedUser, isActive: !selectedUser.isActive });
+                      } catch (error) {
+                        toast.error('Failed to update activation status');
+                      }
+                    }}
+                  >
+                    {selectedUser?.isActive ? 'Deactivate' : 'Activate'}
+                  </Button>
                   <Button
                     variant={selectedUser?.isBlocked ? "outline" : "danger"}
                     size="sm"
                     onClick={() => handleBlockToggle(selectedUser)}
                   >
-                    {selectedUser?.isBlocked ? 'Unblock User' : 'Block User'}
+                    {selectedUser?.isBlocked ? 'Unblock' : 'Block'}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Add Credits Section */}
+              <div className="bg-primary-50 p-4 rounded-2xl border border-primary-100">
+                <h4 className="text-sm font-semibold text-primary-800 mb-3 flex items-center gap-2">
+                  <Shield className="w-4 h-4" /> Credit Management
+                </h4>
+                <div className="flex flex-col gap-1 mb-3">
+                  <span className="text-xs text-primary-600">Current Balance</span>
+                  <span className="text-xl font-bold text-primary-700">₹{selectedUser?.credits || 0}</span>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="Amount to add..."
+                    id="add-credits-input"
+                    className="flex-1 px-4 py-2 bg-white rounded-xl border border-primary-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={async () => {
+                      const amount = document.getElementById('add-credits-input').value;
+                      if (!amount || amount <= 0) return toast.error('Enter a valid amount');
+                      try {
+                        const res = await axiosInstance.put(`/admin/users/${selectedUser._id}`, { credits: amount });
+                        // Update local state
+                        if (selectedUser.role === 'doctor') {
+                          setDoctors(doctors.map(d => d._id === selectedUser._id ? { ...d, credits: res.data.credits } : d));
+                        } else {
+                          setPatients(patients.map(p => p._id === selectedUser._id ? { ...p, credits: res.data.credits } : p));
+                        }
+                        setSelectedUser({ ...selectedUser, credits: res.data.credits });
+                        document.getElementById('add-credits-input').value = '';
+                        toast.success(`₹${amount} added successfully!`);
+                      } catch (error) {
+                        toast.error('Failed to add credits');
+                      }
+                    }}
+                  >
+                    Add Credits
                   </Button>
                 </div>
               </div>
@@ -248,6 +307,16 @@ export default function UserManagementPage() {
                         <span className="font-medium text-primary-600">₹{userDetails.earnings || 0}</span>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => navigate(`/admin/doctor/${userDetails._id}`)}
+                    >
+                      View Full Analytics & Schedule
+                    </Button>
                   </div>
                 </div>
               )}

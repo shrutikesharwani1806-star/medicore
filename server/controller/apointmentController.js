@@ -1,9 +1,10 @@
 import asyncHandler from "express-async-handler";
+import mongoose from "mongoose";
 import Appointment from "../models/apointmentModel.js";
 import User from "../models/userModel.js";
 import Payment from "../models/paymentModel.js";
 import { sendEmail } from "../config/emailService.js";
-import { notifyBookingConfirmed } from "../services/smsService.js";
+import { notifyBookingConfirmed, notifyPaymentPending } from "../services/smsService.js";
 
 
 // Constants for pricing
@@ -53,7 +54,19 @@ const bookAppointment = asyncHandler(async (req, res) => {
     const upfrontCost = BOOKING_FEE;
     const doctorShare = consultationFee - ADMIN_SHARE;
 
-    // 3. Check patient has enough credits
+    // 3. Check for unpaid completed appointments
+    const unpaidAppointment = await Appointment.findOne({
+        patientId,
+        status: 'completed',
+        isPaid: false
+    });
+
+    if (unpaidAppointment) {
+        res.status(403);
+        throw new Error("You have an unpaid completed appointment. Please pay the consultation fee for your previous visit before booking a new one.");
+    }
+
+    // 4. Check patient has enough credits
     const patient = await User.findById(patientId);
 
     if (patient.credits < upfrontCost) {
@@ -145,12 +158,7 @@ const bookAppointment = asyncHandler(async (req, res) => {
 // @desc    Get all appointments for the logged-in patient
 // @route   GET /api/appointment/user
 const getUserAppointments = asyncHandler(async (req, res) => {
-    const uid = req.params.uid || req.user._id;
-
-    if (uid.toString() !== req.user._id.toString() && !req.user.isAdmin) {
-        res.status(403);
-        throw new Error("Not authorized to view these appointments");
-    }
+    const uid = req.user._id;
 
     const appointments = await Appointment.find({ patientId: uid })
         .populate("doctorId", "name category fees image")
@@ -165,17 +173,30 @@ const getAppointmentById = asyncHandler(async (req, res) => {
     const appointmentId = req.params.id;
     const currentUserId = req.user._id;
 
+    if (!mongoose.Types.ObjectId.isValid(appointmentId)) {
+        res.status(400);
+        throw new Error("Invalid Appointment ID format.");
+    }
+
     const appointment = await Appointment.findById(appointmentId)
         .populate("patientId", "name email phone image")
-        .populate("doctorId", "name category image");
+        .populate("doctorId", "name category image address averageRating totalRatings phone email");
 
     if (!appointment) {
         res.status(404);
         throw new Error("Appointment not found!");
     }
 
-    const isPatient = appointment.patientId._id.toString() === currentUserId.toString();
-    const isDoctor = appointment.doctorId._id.toString() === currentUserId.toString();
+    const patientId = appointment.patientId?._id || appointment.patientId;
+    const doctorId = appointment.doctorId?._id || appointment.doctorId;
+
+    if (!patientId || !doctorId) {
+        res.status(500);
+        throw new Error("Appointment data is corrupted (missing participants).");
+    }
+
+    const isPatient = patientId.toString() === currentUserId.toString();
+    const isDoctor = doctorId.toString() === currentUserId.toString();
     const isAdmin = req.user.isAdmin;
 
     if (!isPatient && !isDoctor && !isAdmin) {
@@ -336,6 +357,13 @@ const updateAppointmentStatus = asyncHandler(async (req, res) => {
                 receiverId: appointment.doctorId,
                 description: `Payment request for completed ${appointment.type} appointment on ${appointment.date}`
             });
+
+            // Send SMS notification
+            const patient = await User.findById(appointment.patientId);
+            const doctor = await User.findById(appointment.doctorId);
+            if (patient && doctor) {
+                await notifyPaymentPending(patient, doctor, appointment.amount);
+            }
 
             const io = req.app.get("io");
             if (io) {

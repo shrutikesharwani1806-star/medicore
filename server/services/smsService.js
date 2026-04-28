@@ -36,3 +36,8 @@ export const notifySubscriptionDue = async (doctor) => {
     const message = `Hello Dr. ${doctor.name}, your monthly platform subscription for MediCore is due. Please pay ₹500 to continue receiving new bookings.`;
     await sendSMS(doctor.phone, message);
 };
+
+export const notifyPaymentPending = async (patient, doctor, amount) => {
+    const message = `Hello ${patient.name}, your consultation with Dr. ${doctor.name} is complete. Please pay the remaining consultation fee of ₹${amount} from your MediCore dashboard to book your next appointment. Thank you!`;
+    await sendSMS(patient.phone, message);
+};

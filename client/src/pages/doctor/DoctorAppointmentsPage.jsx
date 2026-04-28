@@ -136,6 +136,9 @@ export default function DoctorAppointmentsPage() {
                       <Button variant="outline" size="sm" icon={Video} onClick={() => navigate(`/video-call/${apt.id}`)}>
                         Video Call
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/chat?userId=${apt.patientId}`)}>
+                        Chat
+                      </Button>
                       <Button variant="primary" size="sm" onClick={() => openConfirm('complete', apt.id, apt.patientName)}>
                         Complete
                       </Button>

@@ -156,4 +156,57 @@
     - `.env` files gitignored to prevent secret exposure.
     - Ready for Render (Backend) and Render/Vercel (Frontend) deployment.
 
+159. **Strict Doctor-Patient Privacy**
+    - Enforced relationship-based access: Doctors can ONLY view detailed profiles and reports of patients they have had appointments with.
+    - Added backend checks to prevent unauthorized access to patient data via ID manipulation.
+
+160. **Doctor Personal Appointment Management**
+    - Doctors can now book appointments as patients and manage them through a dedicated `/doctor/personal-appointments` page.
+    - Added "Personal Bookings" stat card to Doctor Dashboard for better visibility of personal checkups.
+    - Restricted doctors from accessing generic `/patient` dashboard routes to maintain professional context.
+
+161. **Chat & Communication Enhancements**
+    - **WhatsApp Style Messaging**: Redesigned chat bubbles with light green colors for sent messages, checkmarks (read/unread), and refined typography.
+    - **Message & Chat Deletion**: Users can now delete individual messages they've sent or wipe the entire conversation history.
+    - **Real-Time Notifications**: Implemented a global notification system that alerts users with a toast when they receive a message, even if they aren't on the chat page.
+    - **Self-Messaging UI**: If a user messages themselves, they appear as "You" in the chat header and sidebar.
+    - **Video Call Restriction**: Prevented users from initiating video calls with themselves.
+
+162. **Doctor Visibility & Status**
+    - Added a real-time **Active/Inactive** status badge to doctor cards.
+    - Status is dynamically determined based on the doctor's approval and availability settings.
+
+163. **Unified Profile Updates**
+    - Implemented secure profile update route (`PUT /api/auth/profile`) for patients and doctors to manage their personal info.
+    - Verified that all information fetching consistently uses the `userId` derived from the secure authentication token.
+
+164. **Doctor Pending "Demo Mode"**
+    - Implemented a specialized access level for doctors awaiting approval.
+    - Pending doctors can explore the public website and patient dashboard to "watch the demo website" as a user.
+    - Strictly blocked pending doctors from professional clinical tools and finalized appointment bookings.
+
+165. **Mandatory Post-Approval Profile Setup**
+    - Enforced a strict profile setup requirement immediately after account approval.
+    - Approved doctors with incomplete profiles are locked out of all other dashboards and redirected to the `/doctor/profile` setup form.
+    - Mandatory fields include specialization, experience, fees, availability, and payment QR code.
+
+166. **Enhanced Admin Management Dashboard**
+    - Unified the User Management interface with a quick-access modal for both Patients and Doctors.
+    - **Activation & Suspension**: Added one-click toggles for `Activate/Deactivate` and `Block/Unblock` status management.
+    - **Direct Credit Injection**: Enabled administrators to manually add credits to any user's account with real-time balance updates.
+    - **Deep Analytics Integration**: Provided a direct path from the management modal to comprehensive doctor analytics and scheduling pages.
+
+167. **Strict Security & Blocking Policy**
+    - **Login Isolation**: Any account marked as `isBlocked` is instantly prohibited from entering the system.
+    - **Dual-Identifier Security**: Supported both Email and Phone Number login methods, with the block check enforced on both to prevent bypasses.
+    - **Password Reset Protection**: Suspended users are strictly blocked from receiving OTPs or using password recovery features.
+
+168. **Role-Specific Dashboard Routing**
+    - Optimized the Landing Page "Dashboard" link to intelligently route users:
+        - Admins → `/admin`
+        - Approved Doctors → `/doctor`
+        - Pending Doctors → `/patient` (Demo Mode)
+        - Patients → `/patient`
+
 - **Razorpay Sandbox Testing:** Add valid Razorpay keys to environment variables to ensure the checkout iframe doesn't crash on invalid mock keys.
+

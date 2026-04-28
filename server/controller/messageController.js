@@ -27,20 +27,6 @@ export const sendMessage = asyncHandler(async (req, res) => {
         throw new Error("Receiver not found.");
     }
 
-    // Verify confirmed appointment exists
-    const appointment = await Appointment.findOne({
-        $or: [
-            { patientId: senderId, doctorId: receiverId },
-            { patientId: receiverId, doctorId: senderId }
-        ],
-        status: { $in: ["confirmed", "completed"] }
-    });
-
-    if (!appointment && !req.user.isAdmin) {
-        res.status(403);
-        throw new Error("You can only chat after a booking is confirmed.");
-    }
-
     const conversationId = getConversationId(senderId, receiverId);
 
     const message = await Message.create({
@@ -71,20 +57,6 @@ export const getMessages = asyncHandler(async (req, res) => {
     const currentUserId = req.user._id;
 
     const conversationId = getConversationId(currentUserId, otherUserId);
-
-    // Verify confirmed appointment exists
-    const appointment = await Appointment.findOne({
-        $or: [
-            { patientId: currentUserId, doctorId: otherUserId },
-            { patientId: otherUserId, doctorId: currentUserId }
-        ],
-        status: { $in: ["confirmed", "completed"] }
-    });
-
-    if (!appointment && !req.user.isAdmin) {
-        res.status(403);
-        throw new Error("You can only access chat after a booking is confirmed.");
-    }
 
     const messages = await Message.find({ conversationId })
         .populate("senderId", "name image role")
@@ -161,5 +133,34 @@ export const getConversations = asyncHandler(async (req, res) => {
     res.status(200).json(conversations);
 });
 
-const messageController = { sendMessage, getMessages, getConversations };
+// @desc    Get or Create a conversation with a specific user
+// @route   POST /api/messages/get-or-create
+export const getOrCreateConversation = asyncHandler(async (req, res) => {
+    const { targetUserId } = req.body;
+    const currentUserId = req.user._id;
+
+    console.log(`Get/Create Conversation: ${currentUserId} -> ${targetUserId}`.cyan);
+
+    if (!targetUserId) {
+        res.status(400);
+        throw new Error("Target user ID is required.");
+    }
+
+    // Verify target user exists
+    const targetUser = await User.findById(targetUserId).select("name image role category isDoctor");
+    if (!targetUser) {
+        res.status(404);
+        throw new Error("Target user not found.");
+    }
+
+    const conversationId = getConversationId(currentUserId, targetUserId);
+
+    res.status(200).json({
+        conversationId,
+        otherUser: targetUser,
+        status: "success"
+    });
+});
+
+const messageController = { sendMessage, getMessages, getConversations, getOrCreateConversation };
 export default messageController;

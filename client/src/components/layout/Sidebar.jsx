@@ -13,7 +13,7 @@ const menuItems = {
     { path: '/patient/appointments', icon: Calendar, label: 'Appointments' },
     { path: '/patient/payment-requests', icon: DollarSign, label: 'Payment Requests' },
     { path: '/patient/buy-credits', icon: Coins, label: 'Buy Credits' },
-    { path: '/patient/chat', icon: MessageSquare, label: 'Messages' },
+    { path: '/chat', icon: MessageSquare, label: 'Messages' },
     { path: '/patient/reports', icon: FileText, label: 'Reports' },
     { path: '/patient/profile', icon: User, label: 'Profile' },
   ],
@@ -24,7 +24,7 @@ const menuItems = {
     { path: '/doctor/patients', icon: Users, label: 'My Patients' },
     { path: '/doctor/prescriptions', icon: Pill, label: 'Prescriptions' },
     { path: '/doctor/buy-credits', icon: Coins, label: 'Recharge Credits' },
-    { path: '/doctor/chat', icon: MessageSquare, label: 'Messages' },
+    { path: '/chat', icon: MessageSquare, label: 'Messages' },
     { path: '/doctor/profile', icon: User, label: 'Profile' },
   ],
   admin: [
@@ -34,6 +34,9 @@ const menuItems = {
     { path: '/admin/appointments', icon: Calendar, label: 'All Appointments' },
     { path: '/admin/credits', icon: DollarSign, label: 'Credits & Earnings' },
     { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
+    { path: '/patient', icon: LayoutDashboard, label: 'Personal Dashboard' },
+    { path: '/admin/personal-appointments', icon: Calendar, label: 'Personal Bookings' },
+    { path: '/patient/profile', icon: User, label: 'My Profile' },
   ],
 };
 

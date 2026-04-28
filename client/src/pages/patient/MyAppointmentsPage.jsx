@@ -54,10 +54,11 @@ export default function MyAppointmentsPage() {
       return;
     }
     try {
-      await import('../../api/axiosInstance').then(m => m.default.post(`/reviews/${reviewTarget.doctorId}`, {
+      await axiosInstance.post('/reviews', {
+        doctorId: reviewTarget.doctorId,
         rating,
         comment
-      }));
+      });
       toast.success('Review submitted successfully!');
       setReviewTarget(null);
       setRating(0);
@@ -189,7 +190,7 @@ export default function MyAppointmentsPage() {
                         <Button variant="primary" size="sm" className="flex-1" icon={Video} onClick={() => navigate(`/video-call/${apt.id}`)}>
                           Join Video Call
                         </Button>
-                        <Button variant="outline" size="sm" className="flex-1" icon={FileText} onClick={() => navigate(`/patient/chat?userId=${apt.doctorId}`)}>
+                        <Button variant="outline" size="sm" className="flex-1" icon={FileText} onClick={() => navigate(`/chat?userId=${apt.doctorId}`)}>
                           Chat with Doctor
                         </Button>
                       </div>

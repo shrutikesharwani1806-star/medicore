@@ -25,13 +25,11 @@ export default function LoginPage() {
       localStorage.setItem('token', userData.token);
       login(userData);
 
-      if (userData.role === 'admin') navigate('/admin');
-      else if (userData.role === 'doctor') {
-        if (!userData.isActive) navigate('/doctor-pending');
-        else if (userData.profileCompleted) navigate('/doctor');
-        else navigate('/doctor/profile');
+      if (userData.role === 'doctor' && userData.isActive && !userData.profileCompleted) {
+        navigate('/doctor/profile');
+      } else {
+        navigate('/patient');
       }
-      else navigate('/patient');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
     }

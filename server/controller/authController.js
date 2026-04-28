@@ -83,14 +83,16 @@ export const registerUser = asyncHandler(async (req, res) => {
 // @desc    Login User
 // @route   POST /api/auth/login
 export const loginUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password } = req.body; // 'email' field can be email or phone
 
     if (!email || !password) {
         res.status(400);
-        throw new Error("Please provide email and password!");
+        throw new Error("Please provide email/phone and password!");
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+        $or: [{ email: email }, { phone: email }]
+    });
 
     if (!user) {
         res.status(401);
@@ -183,6 +185,11 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     if (!user) {
         res.status(404);
         throw new Error("User not found with this email.");
+    }
+
+    if (user.isBlocked) {
+        res.status(403);
+        throw new Error("This account has been blocked by the administrator.");
     }
 
     // Generate a 6-digit OTP
@@ -279,5 +286,49 @@ export const resetPassword = asyncHandler(async (req, res) => {
     res.status(200).json({ success: true, message: "Password reset successful." });
 });
 
-const authController = { registerUser, loginUser, getMe, privateController, forgotPassword, verifyOtp, resetPassword };
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+export const updateUserProfile = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+        user.name = req.body.name || user.name;
+        user.email = req.body.email || user.email;
+        user.phone = req.body.phone || user.phone;
+        user.image = req.body.image || user.image;
+        user.age = req.body.age || user.age;
+        user.gender = req.body.gender || user.gender;
+        user.bloodGroup = req.body.bloodGroup || user.bloodGroup;
+        user.address = req.body.address || user.address;
+
+        if (req.body.password) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(req.body.password, salt);
+        }
+
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            phone: updatedUser.phone,
+            image: updatedUser.image,
+            isAdmin: updatedUser.isAdmin,
+            isDoctor: updatedUser.isDoctor,
+            role: updatedUser.role,
+            credits: updatedUser.credits,
+            age: updatedUser.age,
+            gender: updatedUser.gender,
+            bloodGroup: updatedUser.bloodGroup,
+            address: updatedUser.address,
+            token: generateToken(updatedUser._id),
+        });
+    } else {
+        res.status(404);
+        throw new Error("User not found");
+    }
+});
+
+const authController = { registerUser, loginUser, getMe, privateController, forgotPassword, verifyOtp, resetPassword, updateUserProfile };
 export default authController;
