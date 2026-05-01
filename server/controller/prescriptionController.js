@@ -54,8 +54,24 @@ const createPrescription = async (req, res) => {
  */
 const getPatientPrescriptions = async (req, res) => {
     try {
-        const prescriptions = await Prescription.find({ patientId: req.params.patientId })
-            .populate('doctorId', 'name specialization')
+        const patientId = req.params.patientId;
+        const currentUserId = req.user._id;
+
+        // Security check: Only the patient themselves, their doctor (if they have an appointment), or admin can see this
+        if (patientId.toString() !== currentUserId.toString() && !req.user.isAdmin) {
+            // Check if doctor has a relationship
+            if (req.user.isDoctor) {
+                const hasRelationship = await Appointment.exists({ patientId, doctorId: currentUserId });
+                if (!hasRelationship) {
+                    return res.status(403).json({ message: "Unauthorized access to patient records." });
+                }
+            } else {
+                return res.status(403).json({ message: "Unauthorized access." });
+            }
+        }
+
+        const prescriptions = await Prescription.find({ patientId })
+            .populate('doctorId', 'name category')
             .sort({ createdAt: -1 });
 
         res.status(200).json(prescriptions);
@@ -71,11 +87,19 @@ const getPatientPrescriptions = async (req, res) => {
 const getPrescriptionById = async (req, res) => {
     try {
         const prescription = await Prescription.findById(req.params.id)
-            .populate('doctorId', 'name specialization')
+            .populate('doctorId', 'name category')
             .populate('patientId', 'name email');
 
         if (!prescription) {
             return res.status(404).json({ message: "Prescription not found" });
+        }
+
+        const currentUserId = req.user._id;
+        const isPatient = prescription.patientId?._id.toString() === currentUserId.toString();
+        const isDoctor = prescription.doctorId?._id.toString() === currentUserId.toString();
+
+        if (!isPatient && !isDoctor && !req.user.isAdmin) {
+            return res.status(403).json({ message: "Unauthorized access to this prescription." });
         }
 
         res.status(200).json(prescription);

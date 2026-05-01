@@ -68,8 +68,10 @@ const approveCreditPurchase = asyncHandler(async (req, res) => {
         throw new Error("User not found.");
     }
 
-    const fee = Math.floor(payment.amount * 0.1);
-    const receivedCredits = payment.amount - fee;
+    const { customAmount } = req.body;
+    const finalAmount = customAmount ? Number(customAmount) : payment.amount;
+    const fee = Math.floor(finalAmount * 0.1);
+    const receivedCredits = finalAmount - fee;
 
     user.credits += receivedCredits;
     await user.save();
@@ -286,56 +288,31 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
         throw new Error("Payment verification failed. Invalid signature.");
     }
 
-    const fee = Math.floor(amount * 0.1);
-    const receivedCredits = amount - fee;
-
-    // Payment is verified. Create payment record and add credits
+    // Payment is verified via Razorpay. Create a PENDING credit request for admin approval.
     const payment = await Payment.create({
         userId,
         type: 'credit_purchase',
         amount: amount,
-        credits: receivedCredits, // 90%
-        status: 'completed',
-        paymentProof: razorpay_payment_id, // Store payment ID as proof
-        description: `Credit purchase via Razorpay`
+        credits: amount, // Full amount requested, admin will process with fee deduction on approval
+        status: 'pending',
+        paymentProof: razorpay_payment_id, // Store Razorpay payment ID as proof
+        description: `Credit purchase via Razorpay (Payment ID: ${razorpay_payment_id})`
     });
 
-    // Add credits to user
-    const user = await User.findById(userId);
-    user.credits += receivedCredits;
-    await user.save();
-
-    // Give admin the fee
-    const admin = await User.findOne({ isAdmin: true });
-    if (admin) {
-        admin.earnings = (admin.earnings || 0) + fee;
-        await admin.save();
-
-        await Payment.create({
-            userId,
-            receiverId: admin._id,
-            type: 'credit_purchase_fee',
-            amount: fee,
-            status: 'completed',
-            description: `10% fee on credit purchase via Razorpay`
-        });
-    }
-
-    // Emit notification
+    // Notify admin about new credit request via socket
     const io = req.app.get("io");
     if (io) {
         io.emit("receive_notification", {
-            type: "CREDITS_ADDED",
-            message: `₹${amount} credits added to your account via Razorpay!`,
-            userId: user._id,
+            type: "CREDIT_REQUEST",
+            message: `New credit request of ₹${amount} from ${req.user.name} (Razorpay verified)`,
+            userId: 'admin',
             time: new Date()
         });
     }
 
     res.status(200).json({
         success: true,
-        message: `₹${amount} credits added to your account successfully!`,
-        newBalance: user.credits,
+        message: `Payment of ₹${amount} confirmed! Your credit request has been sent to admin for approval.`,
         payment
     });
 });

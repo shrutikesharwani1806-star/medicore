@@ -208,5 +208,30 @@
         - Pending Doctors → `/patient` (Demo Mode)
         - Patients → `/patient`
 
-- **Razorpay Sandbox Testing:** Add valid Razorpay keys to environment variables to ensure the checkout iframe doesn't crash on invalid mock keys.
+169. **WhatsApp-Style Chat Management**
+    - **Message Deletion**: Users can now delete individual messages they've sent (long-press/right-click) with real-time sync across both users.
+    - **Conversation Deletion**: Users can wipe their entire chat history with a specific contact from the sidebar.
+    - **Refined UI**: Clean message bubbles with checkmarks and timestamps.
+
+170. **Direct In-Chat Video Consultation**
+    - Added a "Call" button directly in the chat header.
+    - Seamlessly connects patients and doctors via secure Jitsi video rooms without navigating away from the conversation.
+
+171. **Advanced AI Medical Assistant (Gemini 2.5)**
+    - Upgraded the chatbot backend to utilize the **Gemini 2.5 Flash** model.
+    - Implemented a specialized medical system prompt for professional, structured, and empathetic health guidance.
+
+172. **Verified Admin-Approved Credit Flow**
+    - **Razorpay Automation**: Payments via Razorpay are now verified via backend signature checks but held as "Pending" requests.
+    - **Admin Oversight**: Administrators must review and approve credit purchases in the Credits Management panel.
+    - **Dynamic Credit Adjustment**: Admins can adjust the final credit amount during approval to handle custom verification or fee adjustments.
+    - **Real-Time Balance Updates**: Once approved, credits are added to the user's account with instant socket-based notifications.
+
+173. **Comprehensive Backend Stability & Security Audit**
+    - **Strict Schema Alignment**: Synchronized the database schema with frontend components to resolve mismatches in `category` (specialization) and `isActive` (approval) fields.
+    - **Hardened Prescription Security**: Implemented ownership-based access control for medical prescriptions, ensuring data privacy between patients and unauthorized doctors.
+    - **RBAC Data Isolation**: Verified and enforced Role-Based Access Control across all sensitive endpoints, preventing unauthorized data access via ID manipulation.
+    - **Production-Ready API Response**: Stabilized backend response logic to ensure reliable data delivery to the UI, specifically for doctor listings and search filters.
+
+- **Production Deployment**: The platform is now fully optimized for deployment on Render/Vercel with centralized environment configuration and secure authentication.
 

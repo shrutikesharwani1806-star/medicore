@@ -162,5 +162,56 @@ export const getOrCreateConversation = asyncHandler(async (req, res) => {
     });
 });
 
-const messageController = { sendMessage, getMessages, getConversations, getOrCreateConversation };
+// @desc    Delete a single message
+// @route   DELETE /api/messages/:messageId
+export const deleteMessage = asyncHandler(async (req, res) => {
+    const { messageId } = req.params;
+    const currentUserId = req.user._id;
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+        res.status(404);
+        throw new Error("Message not found.");
+    }
+
+    // Only the sender can delete a message
+    if (message.senderId.toString() !== currentUserId.toString()) {
+        res.status(403);
+        throw new Error("You can only delete your own messages.");
+    }
+
+    await Message.findByIdAndDelete(messageId);
+
+    // Emit socket event so the other user's UI updates in real-time
+    const io = req.app.get("io");
+    if (io) {
+        io.to(message.conversationId).emit("message_deleted", { messageId, conversationId: message.conversationId });
+    }
+
+    res.status(200).json({ success: true, message: "Message deleted successfully." });
+});
+
+// @desc    Delete an entire conversation (all messages between two users)
+// @route   DELETE /api/messages/conversation/:otherUserId
+export const deleteConversation = asyncHandler(async (req, res) => {
+    const { otherUserId } = req.params;
+    const currentUserId = req.user._id;
+
+    const conversationId = getConversationId(currentUserId, otherUserId);
+
+    const result = await Message.deleteMany({ conversationId });
+
+    // Emit socket event so the other user's UI updates in real-time
+    const io = req.app.get("io");
+    if (io) {
+        io.to(conversationId).emit("conversation_deleted", { conversationId });
+    }
+
+    res.status(200).json({
+        success: true,
+        message: `Conversation deleted. ${result.deletedCount} messages removed.`
+    });
+});
+
+const messageController = { sendMessage, getMessages, getConversations, getOrCreateConversation, deleteMessage, deleteConversation };
 export default messageController;

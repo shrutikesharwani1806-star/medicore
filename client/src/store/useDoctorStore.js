@@ -15,16 +15,23 @@ const useDoctorStore = create((set, get) => ({
         id: d._id,
         name: d.name,
         specialization: d.category || 'General',
+        category: d.category || 'General',
         image: d.image || `https://api.dicebear.com/9.x/avataaars/svg?seed=${d.name}`,
         rating: d.averageRating || 0,
+        averageRating: d.averageRating || 0,
         reviews: d.totalRatings || 0,
+        totalRatings: d.totalRatings || 0,
         patients: d.patients || 0,
         experience: d.experience,
         fee: d.fees,
+        fees: d.fees,
+        onlineFee: d.onlineFee,
+        offlineFee: d.offlineFee,
         availableSlots: d.availability?.[0]?.slots || ['09:00 AM', '10:00 AM', '11:00 AM'],
         availableDays: d.availability?.map(a => a.day) || ['Monday', 'Tuesday', 'Wednesday'],
         about: `${d.name} is a specialist in ${d.category || 'General Medicine'}.`,
         approved: d.isActive,
+        isActive: d.isActive,
         available: true
       }));
       set({ doctors: formattedDoctors, loading: false });

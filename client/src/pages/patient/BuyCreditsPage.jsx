@@ -86,8 +86,7 @@ export default function BuyCreditsPage() {
             });
             if (verifyRes.data.success) {
               setSubmitted(true);
-              updateCredits(verifyRes.data.newBalance);
-              toast.success('Credits added successfully!');
+              toast.success('Payment confirmed! Credit request sent to admin.');
               // Refresh payment history
               axiosInstance.get('/payment/history').then(res => setPaymentHistory(res.data || []));
             }
@@ -121,12 +120,12 @@ export default function BuyCreditsPage() {
             <CheckCircle className="w-12 h-12 text-green-500" />
             <div className="absolute inset-0 rounded-3xl border-2 border-green-300 animate-ping opacity-30" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Payment Successful! 🎉</h2>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Payment Confirmed! 🎉</h2>
           <p className="text-sm text-slate-500 mb-2">
-            Your credit purchase of <strong>₹{amount}</strong> was successful.
+            Your payment of <strong>₹{amount}</strong> has been verified via Razorpay.
           </p>
-          <p className="text-xs text-green-600 bg-green-50 rounded-xl px-3 py-2 mb-4">
-            ✅ Credits have been added to your account instantly.
+          <p className="text-xs text-amber-600 bg-amber-50 rounded-xl px-3 py-2 mb-4">
+            ⏳ Credit request sent to admin for approval. Credits will be added once admin confirms.
           </p>
           <div className="space-y-3">
             <Button onClick={() => { setSubmitted(false); setAmount(500); }} className="w-full">Buy More Credits</Button>
@@ -205,10 +204,10 @@ export default function BuyCreditsPage() {
           size="lg"
           className="w-full flex items-center justify-center gap-2 mb-2"
         >
-          <Zap className="w-5 h-5" /> Pay ₹{amount} instantly with Razorpay
+          <Zap className="w-5 h-5" /> Pay ₹{amount} via Razorpay
         </Button>
         <p className="text-xs text-center text-slate-500">
-          You will receive <span className="font-bold text-slate-700">₹{amount - Math.floor(amount * 0.1)}</span> credits (after 10% fee).
+          Payment will be verified instantly. Admin will approve and add credits (10% processing fee applies).
         </p>
       </div>
 

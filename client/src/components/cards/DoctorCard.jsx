@@ -68,7 +68,7 @@ export default function DoctorCard({ doctor, showBookButton = true }) {
             className="w-16 h-16 rounded-2xl object-cover bg-slate-100 group-hover:scale-110 transition-transform duration-500 shadow-md"
           />
           <div className="absolute -bottom-1 -right-1">
-            {doctor.approved ? (
+            {(doctor.isActive || doctor.approved) ? (
               <span className="flex items-center gap-1 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-full border-2 border-white shadow-sm">
                 <span className="w-1 h-1 bg-white rounded-full animate-pulse" /> ACTIVE
               </span>

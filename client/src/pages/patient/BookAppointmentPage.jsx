@@ -250,11 +250,11 @@ export default function BookAppointmentPage() {
             <h3 className="font-bold text-lg text-slate-800">{doctor.name}</h3>
             <CheckCircle className="w-4 h-4 text-primary-500 fill-primary-50" />
           </div>
-          <p className="text-sm font-medium text-primary-600 mb-1">{doctor.specialization} • {doctor.experience} yrs exp</p>
+          <p className="text-sm font-medium text-primary-600 mb-1">{doctor.category || doctor.specialization} • {doctor.experience} yrs exp</p>
           <div className="flex items-center gap-1.5">
             <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-            <span className="text-sm font-bold text-slate-700">{doctor.rating || '4.8'}</span>
-            <span className="text-xs text-slate-400">({doctor.reviews || 0} reviews)</span>
+            <span className="text-sm font-bold text-slate-700">{doctor.averageRating || doctor.rating || '4.8'}</span>
+            <span className="text-xs text-slate-400">({doctor.totalRatings || doctor.reviews || 0} reviews)</span>
           </div>
         </div>
         <div className="text-right">

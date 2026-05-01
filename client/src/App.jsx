@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import router from './routes/AppRouter';
 import AIChatbot from './components/ui/AIChatbot';
 import { Heart } from 'lucide-react';
 import axiosInstance from './api/axiosInstance';
 import useAuthStore from './store/useAuthStore';
+import socket from './socket';
 
 function LoadingScreen({ onFinish }) {
   const [progress, setProgress] = useState(0);
@@ -97,6 +98,15 @@ export default function App() {
     };
 
     initializeAuth();
+
+    socket.on('receive_notification', (data) => {
+      toast.success(data.message);
+      if (data.type === 'CREDITS_ADDED' && data.newBalance !== undefined) {
+        useAuthStore.getState().updateCredits(data.newBalance);
+      }
+    });
+
+    return () => socket.off('receive_notification');
   }, [login]);
 
   return (

@@ -8,7 +8,7 @@ const paymentSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['credit_purchase', 'appointment_booking', 'consultation_fee', 'booking_fee', 'withdrawal', 'subscription'],
+        enum: ['credit_purchase', 'credit_purchase_fee', 'appointment_booking', 'consultation_fee', 'booking_fee', 'admin_share', 'withdrawal', 'subscription'],
         required: true
     },
     amount: {

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Send, Paperclip, MoreVertical, FileText, Search, ArrowLeft, Pill, Check, CheckCheck } from 'lucide-react';
+import { Send, Paperclip, MoreVertical, FileText, Search, ArrowLeft, Pill, Check, CheckCheck, Video, Trash2, X } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import toast from 'react-hot-toast';
 import axiosInstance from '../api/axiosInstance';
@@ -147,6 +147,8 @@ export default function UnifiedChatPage() {
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
+  const [contextMenu, setContextMenu] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -240,7 +242,26 @@ export default function UnifiedChatPage() {
     };
 
     socket.on('receive_message', handleNewMessage);
-    return () => socket.off('receive_message');
+
+    const handleMsgDeleted = ({ messageId }) => {
+      setMessages(prev => prev.filter(m => m._id !== messageId));
+    };
+    const handleConvDeleted = ({ conversationId }) => {
+      if (activeChat?.conversationId === conversationId) {
+        setMessages([]);
+        setActiveChat(null);
+        setIsSidebarOpen(true);
+      }
+      refreshSidebar();
+    };
+    socket.on('message_deleted', handleMsgDeleted);
+    socket.on('conversation_deleted', handleConvDeleted);
+
+    return () => {
+      socket.off('receive_message');
+      socket.off('message_deleted');
+      socket.off('conversation_deleted');
+    };
   }, [activeChat?.conversationId, user?._id]);
 
   // 4. Scroll to Bottom
@@ -253,6 +274,32 @@ export default function UnifiedChatPage() {
       const res = await axiosInstance.get('/messages/conversations/list');
       setConversations(res.data);
     } catch (err) {}
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      await axiosInstance.delete(`/messages/${messageId}`);
+      setMessages(prev => prev.filter(m => m._id !== messageId));
+      toast.success('Message deleted');
+      refreshSidebar();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete message');
+    }
+    setContextMenu(null);
+  };
+
+  const handleDeleteConversation = async (otherUserId) => {
+    try {
+      await axiosInstance.delete(`/messages/conversation/${otherUserId}`);
+      setMessages([]);
+      setActiveChat(null);
+      setIsSidebarOpen(true);
+      toast.success('Chat deleted');
+      refreshSidebar();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete chat');
+    }
+    setDeleteConfirm(null);
   };
 
   const handleTyping = (e) => {
@@ -382,16 +429,15 @@ export default function UnifiedChatPage() {
           {filteredConversations.map((conv) => (
             <div
               key={conv.conversationId}
-              onClick={() => {
-                setActiveChat({ conversationId: conv.conversationId, otherUser: conv.otherUser });
-                setIsSidebarOpen(false);
-              }}
               className={`
-                flex items-center gap-3 p-3 cursor-pointer hover:bg-[#F5F6F6] transition-all
+                flex items-center gap-3 p-3 cursor-pointer hover:bg-[#F5F6F6] transition-all group/conv
                 ${activeChat?.conversationId === conv.conversationId ? 'bg-[#EBEBEB]' : ''}
               `}
             >
-              <div className="relative">
+              <div className="relative" onClick={() => {
+                setActiveChat({ conversationId: conv.conversationId, otherUser: conv.otherUser });
+                setIsSidebarOpen(false);
+              }}>
                 <img
                     src={conv.otherUser?.image || `https://api.dicebear.com/9.x/avataaars/svg?seed=${conv.otherUser?.name}`}
                     alt=""
@@ -401,7 +447,10 @@ export default function UnifiedChatPage() {
                     <div className="absolute bottom-0.5 right-0.5 w-3 h-3 bg-[#25D366] border-2 border-white rounded-full"></div>
                 )}
               </div>
-              <div className="flex-1 min-w-0 border-b border-slate-100 pb-3 mt-3">
+              <div className="flex-1 min-w-0 border-b border-slate-100 pb-3 mt-3" onClick={() => {
+                setActiveChat({ conversationId: conv.conversationId, otherUser: conv.otherUser });
+                setIsSidebarOpen(false);
+              }}>
                 <div className="flex justify-between items-start">
                   <h4 className="text-[15px] font-semibold text-slate-800 truncate">{conv.otherUser?.name}</h4>
                   <span className="text-[11px] text-slate-500">
@@ -417,6 +466,13 @@ export default function UnifiedChatPage() {
                   )}
                 </div>
               </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); setDeleteConfirm({ type: 'conversation', otherUser: conv.otherUser }); }}
+                className="opacity-0 group-hover/conv:opacity-100 p-1.5 hover:bg-red-50 rounded-lg transition-all"
+                title="Delete chat"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-red-400" />
+              </button>
             </div>
           ))}
           {filteredConversations.length === 0 && (
@@ -460,6 +516,13 @@ export default function UnifiedChatPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate(`/video-call/${activeChat.conversationId}`)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 text-white text-[12px] font-bold rounded-lg hover:bg-slate-800 transition-all shadow-sm"
+                  title="Video Call"
+                >
+                  <Video className="w-3.5 h-3.5" /> Call
+                </button>
                 {user?.isDoctor && (
                   <button 
                     onClick={() => setIsPrescriptionModalOpen(true)}
@@ -482,15 +545,28 @@ export default function UnifiedChatPage() {
             </header>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 sm:px-10 z-10 space-y-1 scrollbar-thin scrollbar-thumb-slate-400/20">
-              {messages.map((msg) => (
-                <ChatBubble
-                  key={msg._id}
-                  message={msg}
-                  isOwn={(msg.senderId?._id || msg.senderId) === user?._id}
-                />
-              ))}
+            <div className="flex-1 overflow-y-auto p-4 sm:px-10 z-10 space-y-1 scrollbar-thin scrollbar-thumb-slate-400/20" onClick={() => setContextMenu(null)}>
+              {messages.map((msg) => {
+                const isOwn = (msg.senderId?._id || msg.senderId) === user?._id;
+                return (
+                  <div key={msg._id} onContextMenu={(e) => { if (isOwn) { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, messageId: msg._id }); } }}>
+                    <ChatBubble message={msg} isOwn={isOwn} />
+                  </div>
+                );
+              })}
               <div ref={messagesEndRef} />
+
+              {/* Context Menu */}
+              {contextMenu && (
+                <div className="fixed z-[200] bg-white rounded-xl shadow-2xl border border-slate-100 py-1 animate-scale-in" style={{ top: contextMenu.y, left: contextMenu.x }}>
+                  <button onClick={() => handleDeleteMessage(contextMenu.messageId)} className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" /> Delete Message
+                  </button>
+                  <button onClick={() => setContextMenu(null)} className="flex items-center gap-2 px-4 py-2 text-sm text-slate-500 hover:bg-slate-50 w-full transition-colors">
+                    <X className="w-3.5 h-3.5" /> Cancel
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Input Area - Refined and floating-style */}
@@ -536,6 +612,22 @@ export default function UnifiedChatPage() {
           </div>
         )}
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 animate-zoom-in" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Delete Chat?</h3>
+            <p className="text-sm text-slate-500 mb-6">
+              All messages with <strong>{deleteConfirm.otherUser?.name}</strong> will be permanently deleted. This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-all">Cancel</button>
+              <button onClick={() => handleDeleteConversation(deleteConfirm.otherUser?._id)} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-all">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

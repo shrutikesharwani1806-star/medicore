@@ -14,6 +14,12 @@ router.post("/get-or-create", protect.forUser, messageController.getOrCreateConv
 // Get conversation list for current user
 router.get("/conversations/list", protect.forUser, messageController.getConversations);
 
+// Delete an entire conversation with a specific user
+router.delete("/conversation/:otherUserId", protect.forUser, messageController.deleteConversation);
+
+// Delete a single message
+router.delete("/:messageId", protect.forUser, messageController.deleteMessage);
+
 // Get messages with a specific user
 router.get("/:otherUserId", protect.forUser, messageController.getMessages);
 

@@ -59,9 +59,14 @@ export default function CreditsManagementPage() {
     reader.readAsDataURL(file);
   };
 
+  const handleAmountChange = (id, val) => {
+    setCustomAmounts(prev => ({ ...prev, [id]: val }));
+  };
+
   const handleApprove = async (paymentId, userName) => {
     try {
-      await axiosInstance.put(`/payment/approve/${paymentId}`);
+      const customAmount = customAmounts[paymentId];
+      await axiosInstance.put(`/payment/approve/${paymentId}`, { customAmount });
       toast.success(`Credits added to ${userName}'s account!`);
       // Refresh
       fetchData();
@@ -170,11 +175,20 @@ export default function CreditsManagementPage() {
                     <p className="text-xs text-slate-400">{p.userId?.email} • {new Date(p.createdAt).toLocaleDateString()}</p>
                   </div>
                   <div className="text-right flex items-center gap-2">
-                    <span className="text-sm font-bold text-slate-700">₹{p.amount}</span>
+                    <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-1 shadow-sm">
+                      <span className="text-xs text-slate-400 font-bold">₹</span>
+                      <input 
+                        type="number" 
+                        className="w-14 text-sm font-bold text-slate-700 focus:outline-none bg-transparent" 
+                        defaultValue={p.amount}
+                        onChange={(e) => handleAmountChange(p._id, e.target.value)}
+                        title="Edit amount to approve"
+                      />
+                    </div>
                     <button
                       onClick={() => handleApprove(p._id, p.userId?.name)}
-                      className="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-all cursor-pointer"
-                      title="Approve"
+                      className="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-all cursor-pointer shadow-sm border border-green-100"
+                      title="Approve and Update Credits"
                     >
                       <CheckCircle className="w-4 h-4" />
                     </button>

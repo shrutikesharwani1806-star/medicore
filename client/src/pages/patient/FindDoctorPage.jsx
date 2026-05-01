@@ -21,7 +21,7 @@ export default function FindDoctorPage() {
       d.name.toLowerCase().includes(search.toLowerCase()) ||
       d.specialization.toLowerCase().includes(search.toLowerCase());
     const matchesSpec = selectedSpec === 'All' || d.specialization === selectedSpec;
-    return matchesSearch && matchesSpec && d.approved;
+    return matchesSearch && matchesSpec;
   });
 
   const specializations = Array.from(new Set(doctors.filter(d => d.approved).map(d => d.specialization))).filter(Boolean);
