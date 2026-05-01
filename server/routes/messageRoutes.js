@@ -20,6 +20,9 @@ router.delete("/conversation/:otherUserId", protect.forUser, messageController.d
 // Delete a single message
 router.delete("/:messageId", protect.forUser, messageController.deleteMessage);
 
+// Edit a single message
+router.put("/:messageId", protect.forUser, messageController.editMessage);
+
 // Get messages with a specific user
 router.get("/:otherUserId", protect.forUser, messageController.getMessages);
 

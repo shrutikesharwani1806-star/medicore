@@ -213,5 +213,46 @@ export const deleteConversation = asyncHandler(async (req, res) => {
     });
 });
 
-const messageController = { sendMessage, getMessages, getConversations, getOrCreateConversation, deleteMessage, deleteConversation };
+// @desc    Edit a single message
+// @route   PUT /api/messages/:messageId
+export const editMessage = asyncHandler(async (req, res) => {
+    const { messageId } = req.params;
+    const { text } = req.body;
+    const currentUserId = req.user._id;
+
+    if (!text) {
+        res.status(400);
+        throw new Error("Message text is required for editing.");
+    }
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+        res.status(404);
+        throw new Error("Message not found.");
+    }
+
+    // Only the sender can edit a message
+    if (message.senderId.toString() !== currentUserId.toString()) {
+        res.status(403);
+        throw new Error("You can only edit your own messages.");
+    }
+
+    message.text = text;
+    message.isEdited = true;
+    await message.save();
+
+    const populatedMessage = await Message.findById(messageId)
+        .populate("senderId", "name image role")
+        .populate("receiverId", "name image role");
+
+    // Emit socket event so the other user's UI updates in real-time
+    const io = req.app.get("io");
+    if (io) {
+        io.to(message.conversationId).emit("message_edited", populatedMessage);
+    }
+
+    res.status(200).json(populatedMessage);
+});
+
+const messageController = { sendMessage, getMessages, getConversations, getOrCreateConversation, deleteMessage, deleteConversation, editMessage };
 export default messageController;

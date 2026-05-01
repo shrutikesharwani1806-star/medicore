@@ -39,6 +39,7 @@ function ChatBubble({ message, isOwn }) {
           ${isPrescription ? 'font-medium text-slate-700' : ''}
         `}>
           {isPrescription ? message.text.replace('💊 **PRESCRIPTION**', '').trim() : message.text}
+          {message.isEdited && <span className="text-[10px] text-slate-400 ml-2 italic">(edited)</span>}
         </p>
 
         {message.fileUrl && (
@@ -149,6 +150,7 @@ export default function UnifiedChatPage() {
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [editingMessageId, setEditingMessageId] = useState(null);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -246,6 +248,9 @@ export default function UnifiedChatPage() {
     const handleMsgDeleted = ({ messageId }) => {
       setMessages(prev => prev.filter(m => m._id !== messageId));
     };
+    const handleMsgEdited = (msg) => {
+      setMessages(prev => prev.map(m => m._id === msg._id ? msg : m));
+    };
     const handleConvDeleted = ({ conversationId }) => {
       if (activeChat?.conversationId === conversationId) {
         setMessages([]);
@@ -255,11 +260,13 @@ export default function UnifiedChatPage() {
       refreshSidebar();
     };
     socket.on('message_deleted', handleMsgDeleted);
+    socket.on('message_edited', handleMsgEdited);
     socket.on('conversation_deleted', handleConvDeleted);
 
     return () => {
       socket.off('receive_message');
       socket.off('message_deleted');
+      socket.off('message_edited');
       socket.off('conversation_deleted');
     };
   }, [activeChat?.conversationId, user?._id]);
@@ -326,6 +333,14 @@ export default function UnifiedChatPage() {
     socket.emit('typing', { room: activeChat.conversationId, userId: user._id, isTyping: false });
 
     try {
+      if (editingMessageId && typeof val !== 'string') {
+          const res = await axiosInstance.put(`/messages/${editingMessageId}`, { text: textToSend });
+          setMessages(prev => prev.map(m => m._id === editingMessageId ? res.data : m));
+          setInput('');
+          setEditingMessageId(null);
+          return;
+      }
+
       const res = await axiosInstance.post('/messages/send', {
         receiverId: activeChat.otherUser._id,
         text: textToSend
@@ -559,6 +574,16 @@ export default function UnifiedChatPage() {
               {/* Context Menu */}
               {contextMenu && (
                 <div className="fixed z-[200] bg-white rounded-xl shadow-2xl border border-slate-100 py-1 animate-scale-in" style={{ top: contextMenu.y, left: contextMenu.x }}>
+                  <button onClick={() => { 
+                    const msgToEdit = messages.find(m => m._id === contextMenu.messageId);
+                    if (msgToEdit) {
+                      setInput(msgToEdit.text);
+                      setEditingMessageId(contextMenu.messageId);
+                    }
+                    setContextMenu(null); 
+                  }} className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 w-full transition-colors">
+                    <FileText className="w-3.5 h-3.5" /> Edit Message
+                  </button>
                   <button onClick={() => handleDeleteMessage(contextMenu.messageId)} className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full transition-colors">
                     <Trash2 className="w-3.5 h-3.5" /> Delete Message
                   </button>
@@ -581,6 +606,12 @@ export default function UnifiedChatPage() {
               </div>
               <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex-1 flex items-center gap-3">
                 <div className="flex-1 relative group">
+                  {editingMessageId && (
+                    <div className="absolute -top-8 left-2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded-md flex items-center gap-2">
+                      <span>Editing message...</span>
+                      <X className="w-3 h-3 cursor-pointer hover:text-red-400" onClick={() => { setEditingMessageId(null); setInput(''); }} />
+                    </div>
+                  )}
                   <input
                     type="text"
                     placeholder="Type your message..."

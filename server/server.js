@@ -39,8 +39,10 @@ const allowedOrigins = [
     process.env.CLIENT_URL,            // Production frontend (Render)
     "http://localhost:5173",            // Vite dev server
     "http://127.0.0.1:5173",            // Vite dev server (IP)
+    "http://[::1]:5173",               // Vite dev server (IPv6)
     "http://localhost:5000",            // Same-origin in production
     "http://127.0.0.1:5000",            // Same-origin (IP)
+    "http://[::1]:5000",               // Same-origin (IPv6)
     "https://medicore-6kuo.onrender.com" // Explicit Render URL
 ].filter(Boolean)
 

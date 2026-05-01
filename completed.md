@@ -209,6 +209,7 @@
         - Patients → `/patient`
 
 169. **WhatsApp-Style Chat Management**
+    - **Message Editing**: Added the ability for users to edit their sent messages in real-time, with an '(edited)' indicator appearing in the chat bubble.
     - **Message Deletion**: Users can now delete individual messages they've sent (long-press/right-click) with real-time sync across both users.
     - **Conversation Deletion**: Users can wipe their entire chat history with a specific contact from the sidebar.
     - **Refined UI**: Clean message bubbles with checkmarks and timestamps.
