@@ -1,12 +1,11 @@
 import axios from "axios";
 
 // ✅ Base URL (auto switch between local & production)
-const BACKEND_URL =
-    import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = import.meta.env.DEV ? "http://localhost:5000" : "";
 
 // ✅ Create instance
 const axiosInstance = axios.create({
-    baseURL: `${BACKEND_URL}/api`,
+    baseURL: import.meta.env.DEV ? `${BACKEND_URL}/api` : "/api",
     withCredentials: true,
     timeout: 15000, // prevent hanging requests
     headers: {

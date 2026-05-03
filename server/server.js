@@ -179,24 +179,18 @@ app.use('/uploads', express.static('uploads'));
 const buildPath = path.resolve(__dirname, '../client/dist');
 
 //5. Static files serving & SPA Routing
-if (process.env.NODE_ENV === "production") {
-    // serve static files from the build directory
-    app.use(express.static(buildPath));
+// serve static files from the build directory
+app.use(express.static(buildPath));
 
-    // Express v5 requires a named parameter for wildcards (/*splat)
-    app.get('/*splat', (req, res) => {
-        res.sendFile(path.join(buildPath, 'index.html'), (err) => {
-            if (err) {
-                //if index.html is missing, this provides a clearer error
-                res.status(500).send("Build file index.html not found. Ensure you ran 'npm run build' in thr client")
-            }
-        });
+// Express v5 requires a named parameter for wildcards (/*splat)
+app.get('/*splat', (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'), (err) => {
+        if (err) {
+            //if index.html is missing, this provides a clearer error
+            res.status(500).send("Build file index.html not found. Ensure you ran 'npm run build' in the client folder.");
+        }
     });
-}else {
-    app.get("/", (req, res) => {
-        res.send("API is running... (development Mode)")
-    })
-}
+});
 
 //error handler 
 app.use(errorHandler)

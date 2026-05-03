@@ -561,10 +561,36 @@ export default function UnifiedChatPage() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 sm:px-10 z-10 space-y-1 scrollbar-thin scrollbar-thumb-slate-400/20" onClick={() => setContextMenu(null)}>
-              {messages.map((msg) => {
+              {messages.map((msg, index) => {
                 const isOwn = (msg.senderId?._id || msg.senderId) === user?._id;
+                
+                // Determine if we need to show a date separator
+                const msgDate = new Date(msg.createdAt || Date.now());
+                const prevMsg = messages[index - 1];
+                const prevDate = prevMsg ? new Date(prevMsg.createdAt || Date.now()) : null;
+                
+                let showDateSeparator = false;
+                if (!prevDate || msgDate.toDateString() !== prevDate.toDateString()) {
+                  showDateSeparator = true;
+                }
+
+                const today = new Date();
+                const yesterday = new Date();
+                yesterday.setDate(today.getDate() - 1);
+                
+                let dateString = msgDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+                if (msgDate.toDateString() === today.toDateString()) dateString = 'Today';
+                else if (msgDate.toDateString() === yesterday.toDateString()) dateString = 'Yesterday';
+
                 return (
                   <div key={msg._id} onContextMenu={(e) => { if (isOwn) { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, messageId: msg._id }); } }}>
+                    {showDateSeparator && (
+                      <div className="flex justify-center my-4 animate-fade-in">
+                        <span className="bg-[#E1F3FB] text-slate-600 text-[11px] font-medium px-3 py-1 rounded-lg shadow-sm border border-black/5 uppercase tracking-wide">
+                          {dateString}
+                        </span>
+                      </div>
+                    )}
                     <ChatBubble message={msg} isOwn={isOwn} />
                   </div>
                 );
